@@ -160,7 +160,9 @@ function FilterBtn({ active, onClick, label }: { active: boolean, onClick: () =>
 function TaskForm({ onTaskAdded }: { onTaskAdded: () => void }) {
   const [title, setTitle] = useState('')
   const [giver, setGiver] = useState('')
+  const [startDate, setStartDate] = useState('')
   const [deadline, setDeadline] = useState('')
+  const [remarks, setRemarks] = useState('')
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium')
   const [loading, setLoading] = useState(false)
 
@@ -171,10 +173,12 @@ function TaskForm({ onTaskAdded }: { onTaskAdded: () => void }) {
     const { error } = await supabase.from('tasks').insert([{
       title,
       task_giver: giver,
+      start_date: startDate,
       deadline,
+      remarks,
       priority,
       status: 'pending',
-      user_id: 'temp-user-id' // In a real app, this would be from Auth
+      user_id: 'temp-user-id'
     }])
 
     if (error) {
@@ -182,7 +186,9 @@ function TaskForm({ onTaskAdded }: { onTaskAdded: () => void }) {
     } else {
       setTitle('')
       setGiver('')
+      setStartDate('')
       setDeadline('')
+      setRemarks('')
       onTaskAdded()
     }
     setLoading(false)
@@ -212,6 +218,23 @@ function TaskForm({ onTaskAdded }: { onTaskAdded: () => void }) {
           />
         </div>
         <div>
+          <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-muted)' }}>Priority</label>
+          <select value={priority} onChange={e => setPriority(e.target.value as any)} style={{ width: '100%' }}>
+            <option value="low">Low Priority</option>
+            <option value="medium">Medium Priority</option>
+            <option value="high">High Priority</option>
+          </select>
+        </div>
+        <div>
+          <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-muted)' }}>Start Date</label>
+          <input 
+            type="date" 
+            value={startDate} 
+            onChange={e => setStartDate(e.target.value)} 
+            style={{ width: '100%' }}
+          />
+        </div>
+        <div>
           <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-muted)' }}>Deadline</label>
           <input 
             required 
@@ -221,15 +244,16 @@ function TaskForm({ onTaskAdded }: { onTaskAdded: () => void }) {
             style={{ width: '100%' }}
           />
         </div>
-        <div>
-          <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-muted)' }}>Priority</label>
-          <select value={priority} onChange={e => setPriority(e.target.value as any)} style={{ width: '100%' }}>
-            <option value="low">Low Priority</option>
-            <option value="medium">Medium Priority</option>
-            <option value="high">High Priority</option>
-          </select>
+        <div style={{ gridColumn: 'span 2' }}>
+          <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-muted)' }}>Remarks</label>
+          <textarea 
+            value={remarks} 
+            onChange={e => setRemarks(e.target.value)} 
+            placeholder="Add any extra notes..." 
+            style={{ width: '100%', height: '80px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid var(--glass-border)', borderRadius: '12px', padding: '12px', color: 'white' }}
+          />
         </div>
-        <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+        <div style={{ gridColumn: 'span 2' }}>
           <button 
             type="submit" 
             disabled={loading}
@@ -304,7 +328,10 @@ function TaskItem({ task, onUpdate }: { task: Task, onUpdate: () => void }) {
             <User size={14} /> {task.task_giver}
           </small>
           <small style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--text-muted)' }}>
-            <Calendar size={14} /> {task.deadline}
+            <Calendar size={14} /> 
+            {task.start_date ? `Start: ${task.start_date}` : ''} 
+            {task.start_date && task.deadline ? ' | ' : ''}
+            {task.deadline ? `End: ${task.deadline}` : ''}
           </small>
           {daysRemaining !== null && (
             <small style={{ 
@@ -319,6 +346,11 @@ function TaskItem({ task, onUpdate }: { task: Task, onUpdate: () => void }) {
             </small>
           )}
         </div>
+        {task.remarks && (
+          <p style={{ marginTop: '12px', fontSize: '0.9rem', color: 'var(--text-muted)', fontStyle: 'italic', background: 'rgba(255,255,255,0.03)', padding: '8px 12px', borderRadius: '8px' }}>
+            "{task.remarks}"
+          </p>
+        )}
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>

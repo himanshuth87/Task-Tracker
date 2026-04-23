@@ -20,4 +20,6 @@ export type Task = {
   user_id: string;
   task_giver: string;
   deadline: string | null;
+  start_date: string | null;
+  remarks: string | null;
 };

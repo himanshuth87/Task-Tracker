@@ -8,6 +8,8 @@ CREATE TABLE tasks (
   category TEXT DEFAULT 'general',
   task_giver TEXT,
   deadline DATE,
+  start_date DATE,
+  remarks TEXT,
   user_id TEXT, -- For now, we use a placeholder or handle auth later
   created_at TIMESTAMPTZ DEFAULT now()
 );
