@@ -1,24 +1,45 @@
 import { useState, useEffect } from 'react'
-import { Plus, CheckCircle2, Circle, Clock, User, Calendar, Trash2, Filter, BarChart3, ChevronRight, Edit2, X, Check } from 'lucide-react'
+import { Plus, CheckCircle2, Circle, Clock, User, Calendar, Trash2, Filter, BarChart3, ChevronRight, Edit2, X, Check, LogOut } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import './App.css'
 import { supabase, type Task } from './supabase'
+import { Auth } from './Auth'
+import { Session } from '@supabase/supabase-js'
 
 function App() {
+  const [session, setSession] = useState<Session | null>(null)
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [filter, setFilter] = useState<'all' | 'pending' | 'completed'>('all')
 
   useEffect(() => {
-    fetchTasks()
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session)
+    })
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session)
+    })
+
+    return () => subscription.unsubscribe()
   }, [])
 
+  useEffect(() => {
+    if (session) {
+      fetchTasks()
+    }
+  }, [session])
+
   async function fetchTasks() {
+    if (!session) return
     setLoading(true)
     const { data, error } = await supabase
       .from('tasks')
       .select('*')
+      .eq('user_id', session.user.id)
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -40,12 +61,24 @@ function App() {
     pending: tasks.filter(t => t.status === 'pending').length
   }
 
+  if (!session) {
+    return <Auth />
+  }
+
   return (
     <div className="app-container">
       <header className="header">
         <div>
           <h1 className="gradient-text" style={{ fontSize: '2.5rem', fontWeight: 700 }}>TaskTracker</h1>
-          <p style={{ color: 'var(--text-muted)' }}>Manage your workflow with precision</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <p style={{ color: 'var(--text-muted)' }}>{session.user.email}</p>
+            <button 
+              onClick={() => supabase.auth.signOut()}
+              style={{ background: 'transparent', color: 'var(--accent)', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+            >
+              <LogOut size={14} /> Sign Out
+            </button>
+          </div>
         </div>
         <button 
           onClick={() => setShowForm(!showForm)}
@@ -102,7 +135,7 @@ function App() {
                 exit={{ opacity: 0, y: -20 }}
                 style={{ marginBottom: '32px' }}
               >
-                <TaskForm onTaskAdded={fetchTasks} />
+                <TaskForm onTaskAdded={fetchTasks} userId={session.user.id} />
               </motion.div>
             )}
           </AnimatePresence>
@@ -157,7 +190,7 @@ function FilterBtn({ active, onClick, label }: { active: boolean, onClick: () =>
   )
 }
 
-function TaskForm({ onTaskAdded }: { onTaskAdded: () => void }) {
+function TaskForm({ onTaskAdded, userId }: { onTaskAdded: () => void, userId: string }) {
   const [title, setTitle] = useState('')
   const [giver, setGiver] = useState('')
   const [startDate, setStartDate] = useState('')
@@ -178,7 +211,7 @@ function TaskForm({ onTaskAdded }: { onTaskAdded: () => void }) {
       remarks,
       priority,
       status: 'pending',
-      user_id: 'temp-user-id'
+      user_id: userId
     }])
 
     if (error) {
