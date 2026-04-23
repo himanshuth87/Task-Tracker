@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
-import { Plus, CheckCircle2, Circle, Clock, User, Calendar, Trash2, Filter, BarChart3, ChevronRight, Edit2, X, Check, LogOut } from 'lucide-react'
+import { Plus, CheckCircle2, Circle, Clock, User, Calendar, Trash2, Filter, BarChart3, ChevronRight, Edit2, X, Check, LogOut, AlertTriangle, Bell } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import './App.css'
 import { supabase, type Task } from './supabase'
 import { Auth } from './Auth'
-import { Session } from '@supabase/supabase-js'
+import type { Session } from '@supabase/supabase-js'
 
 function App() {
   const [session, setSession] = useState<Session | null>(null)
@@ -61,6 +61,22 @@ function App() {
     pending: tasks.filter(t => t.status === 'pending').length
   }
 
+  const tasksDueSoon = tasks.filter(t => {
+    if (t.status === 'completed') return false
+    const days = getDaysRemaining(t.deadline)
+    return days !== null && days >= 0 && days <= 2
+  })
+
+  function getDaysRemaining(deadline: string | null) {
+    if (!deadline) return null
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const deadlineDate = new Date(deadline)
+    const diffTime = deadlineDate.getTime() - today.getTime()
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    return diffDays
+  }
+
   if (!session) {
     return <Auth />
   }
@@ -98,6 +114,34 @@ function App() {
           {showForm ? 'Close' : 'New Task'}
         </button>
       </header>
+
+      <AnimatePresence>
+        {tasksDueSoon.length > 0 && (
+          <motion.div 
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="glass-card"
+            style={{ 
+              marginBottom: '32px', 
+              padding: '16px 24px', 
+              border: '1px solid rgba(245, 158, 11, 0.3)',
+              background: 'linear-gradient(90deg, rgba(245, 158, 11, 0.05) 0%, transparent 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '16px'
+            }}
+          >
+            <div style={{ background: 'rgba(245, 158, 11, 0.2)', padding: '10px', borderRadius: '12px', color: '#f59e0b' }}>
+              <Bell size={20} className="animate-bounce" />
+            </div>
+            <div>
+              <h4 style={{ color: '#f59e0b', fontWeight: 600 }}>Reminder: You have {tasksDueSoon.length} tasks due soon!</h4>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Tasks expiring in less than 2 days are highlighted in your list.</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="task-grid">
         <aside>
@@ -339,17 +383,18 @@ function TaskItem({ task, onUpdate }: { task: Task, onUpdate: () => void }) {
     }
   }
 
-  const getDaysRemaining = () => {
-    if (!task.deadline) return null
+  const daysRemaining = getDaysRemaining(task.deadline)
+  const isDueSoon = task.status !== 'completed' && daysRemaining !== null && daysRemaining >= 0 && daysRemaining <= 2
+
+  function getDaysRemaining(deadline: string | null) {
+    if (!deadline) return null
     const today = new Date()
     today.setHours(0, 0, 0, 0)
-    const deadlineDate = new Date(task.deadline)
+    const deadlineDate = new Date(deadline)
     const diffTime = deadlineDate.getTime() - today.getTime()
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
     return diffDays
   }
-
-  const daysRemaining = getDaysRemaining()
 
   return (
     <motion.div 
@@ -362,7 +407,9 @@ function TaskItem({ task, onUpdate }: { task: Task, onUpdate: () => void }) {
         display: 'flex', 
         flexDirection: 'column',
         gap: '16px',
-        opacity: task.status === 'completed' ? 0.7 : 1
+        opacity: task.status === 'completed' ? 0.7 : 1,
+        border: isDueSoon ? '1px solid rgba(245, 158, 11, 0.5)' : '1px solid var(--glass-border)',
+        boxShadow: isDueSoon ? '0 0 20px rgba(245, 158, 11, 0.1)' : 'none'
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
@@ -452,10 +499,11 @@ function TaskItem({ task, onUpdate }: { task: Task, onUpdate: () => void }) {
                 alignItems: 'center', 
                 gap: '4px', 
                 color: daysRemaining < 0 ? 'var(--accent)' : daysRemaining <= 2 ? '#f59e0b' : 'var(--text-muted)',
-                fontWeight: daysRemaining <= 2 ? 600 : 400
+                fontWeight: daysRemaining <= 2 ? 700 : 400
               }}>
                 <Clock size={14} /> 
                 {daysRemaining === 0 ? 'Due Today' : daysRemaining < 0 ? `${Math.abs(daysRemaining)} days overdue` : `${daysRemaining} days left`}
+                {isDueSoon && <span style={{ marginLeft: '8px', background: '#f59e0b', color: '#000', padding: '1px 6px', borderRadius: '4px', fontSize: '0.65rem', fontWeight: 800 }}>REMINDER</span>}
               </small>
             )}
           </>
