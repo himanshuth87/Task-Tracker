@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, CheckCircle2, Circle, Clock, User, Calendar, Trash2, Filter, BarChart3, ChevronRight } from 'lucide-react'
+import { Plus, CheckCircle2, Circle, Clock, User, Calendar, Trash2, Filter, BarChart3, ChevronRight, Edit2, X, Check } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import './App.css'
 import { supabase, type Task } from './supabase'
@@ -269,6 +269,9 @@ function TaskForm({ onTaskAdded }: { onTaskAdded: () => void }) {
 }
 
 function TaskItem({ task, onUpdate }: { task: Task, onUpdate: () => void }) {
+  const [isEditing, setIsEditing] = useState(false)
+  const [editedTask, setEditedTask] = useState({ ...task })
+
   const toggleStatus = async () => {
     const { error } = await supabase
       .from('tasks')
@@ -282,6 +285,25 @@ function TaskItem({ task, onUpdate }: { task: Task, onUpdate: () => void }) {
     if (!confirm('Are you sure?')) return
     const { error } = await supabase.from('tasks').delete().eq('id', task.id)
     if (!error) onUpdate()
+  }
+
+  const handleSave = async () => {
+    const { error } = await supabase
+      .from('tasks')
+      .update({
+        title: editedTask.title,
+        task_giver: editedTask.task_giver,
+        start_date: editedTask.start_date,
+        deadline: editedTask.deadline,
+        priority: editedTask.priority,
+        remarks: editedTask.remarks
+      })
+      .eq('id', task.id)
+    
+    if (!error) {
+      setIsEditing(false)
+      onUpdate()
+    }
   }
 
   const getDaysRemaining = () => {
@@ -305,70 +327,113 @@ function TaskItem({ task, onUpdate }: { task: Task, onUpdate: () => void }) {
       style={{ 
         padding: '20px 24px', 
         display: 'flex', 
-        alignItems: 'center', 
-        gap: '20px',
+        flexDirection: 'column',
+        gap: '16px',
         opacity: task.status === 'completed' ? 0.7 : 1
       }}
     >
-      <button onClick={toggleStatus} style={{ background: 'transparent', color: task.status === 'completed' ? '#10b981' : 'var(--text-muted)' }}>
-        {task.status === 'completed' ? <CheckCircle2 size={24} /> : <Circle size={24} />}
-      </button>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+        <button onClick={toggleStatus} style={{ background: 'transparent', color: task.status === 'completed' ? '#10b981' : 'var(--text-muted)' }}>
+          {task.status === 'completed' ? <CheckCircle2 size={24} /> : <Circle size={24} />}
+        </button>
 
-      <div style={{ flex: 1 }}>
-        <h4 style={{ 
-          fontSize: '1.1rem', 
-          fontWeight: 600, 
-          textDecoration: task.status === 'completed' ? 'line-through' : 'none',
-          marginBottom: '6px'
-        }}>
-          {task.title}
-        </h4>
-        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-          <small style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--text-muted)' }}>
-            <User size={14} /> {task.task_giver}
-          </small>
-          <small style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--text-muted)' }}>
-            <Calendar size={14} /> 
-            {task.start_date ? `Start: ${task.start_date}` : ''} 
-            {task.start_date && task.deadline ? ' | ' : ''}
-            {task.deadline ? `End: ${task.deadline}` : ''}
-          </small>
-          {daysRemaining !== null && (
-            <small style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '4px', 
-              color: daysRemaining < 0 ? 'var(--accent)' : daysRemaining <= 2 ? '#f59e0b' : 'var(--text-muted)',
-              fontWeight: daysRemaining <= 2 ? 600 : 400
+        <div style={{ flex: 1 }}>
+          {isEditing ? (
+            <input 
+              style={{ width: '100%', fontSize: '1.1rem', fontWeight: 600, background: 'rgba(255,255,255,0.1)' }}
+              value={editedTask.title}
+              onChange={e => setEditedTask({ ...editedTask, title: e.target.value })}
+            />
+          ) : (
+            <h4 style={{ 
+              fontSize: '1.1rem', 
+              fontWeight: 600, 
+              textDecoration: task.status === 'completed' ? 'line-through' : 'none',
             }}>
-              <Clock size={14} /> 
-              {daysRemaining === 0 ? 'Due Today' : daysRemaining < 0 ? `${Math.abs(daysRemaining)} days overdue` : `${daysRemaining} days left`}
-            </small>
+              {task.title}
+            </h4>
           )}
         </div>
-        {task.remarks && (
-          <p style={{ marginTop: '12px', fontSize: '0.9rem', color: 'var(--text-muted)', fontStyle: 'italic', background: 'rgba(255,255,255,0.03)', padding: '8px 12px', borderRadius: '8px' }}>
-            "{task.remarks}"
-          </p>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {isEditing ? (
+            <>
+              <button onClick={handleSave} style={{ background: 'transparent', color: '#10b981' }}><Check size={20} /></button>
+              <button onClick={() => setIsEditing(false)} style={{ background: 'transparent', color: 'var(--accent)' }}><X size={20} /></button>
+            </>
+          ) : (
+            <>
+              <span style={{ 
+                padding: '4px 10px', 
+                borderRadius: '20px', 
+                fontSize: '0.75rem', 
+                fontWeight: 600,
+                background: task.priority === 'high' ? 'rgba(244, 63, 94, 0.1)' : task.priority === 'medium' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(16, 185, 129, 0.1)',
+                color: task.priority === 'high' ? 'var(--accent)' : task.priority === 'medium' ? '#f59e0b' : '#10b981',
+                textTransform: 'uppercase'
+              }}>
+                {task.priority}
+              </span>
+              <button onClick={() => setIsEditing(true)} style={{ background: 'transparent', color: 'rgba(255, 255, 255, 0.4)' }}>
+                <Edit2 size={18} />
+              </button>
+              <button onClick={deleteTask} style={{ background: 'transparent', color: 'rgba(255, 255, 255, 0.15)' }}>
+                <Trash2 size={18} />
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', paddingLeft: '44px' }}>
+        {isEditing ? (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', width: '100%' }}>
+            <input placeholder="Giver" value={editedTask.task_giver} onChange={e => setEditedTask({ ...editedTask, task_giver: e.target.value })} />
+            <select value={editedTask.priority} onChange={e => setEditedTask({ ...editedTask, priority: e.target.value as any })}>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+            </select>
+            <input type="date" value={editedTask.start_date || ''} onChange={e => setEditedTask({ ...editedTask, start_date: e.target.value })} />
+            <input type="date" value={editedTask.deadline || ''} onChange={e => setEditedTask({ ...editedTask, deadline: e.target.value })} />
+            <textarea 
+              style={{ gridColumn: 'span 2', height: '60px' }}
+              value={editedTask.remarks || ''}
+              onChange={e => setEditedTask({ ...editedTask, remarks: e.target.value })}
+            />
+          </div>
+        ) : (
+          <>
+            <small style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--text-muted)' }}>
+              <User size={14} /> {task.task_giver}
+            </small>
+            <small style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--text-muted)' }}>
+              <Calendar size={14} /> 
+              {task.start_date ? `Start: ${task.start_date}` : ''} 
+              {task.start_date && task.deadline ? ' | ' : ''}
+              {task.deadline ? `End: ${task.deadline}` : ''}
+            </small>
+            {daysRemaining !== null && (
+              <small style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '4px', 
+                color: daysRemaining < 0 ? 'var(--accent)' : daysRemaining <= 2 ? '#f59e0b' : 'var(--text-muted)',
+                fontWeight: daysRemaining <= 2 ? 600 : 400
+              }}>
+                <Clock size={14} /> 
+                {daysRemaining === 0 ? 'Due Today' : daysRemaining < 0 ? `${Math.abs(daysRemaining)} days overdue` : `${daysRemaining} days left`}
+              </small>
+            )}
+          </>
         )}
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <span style={{ 
-          padding: '4px 10px', 
-          borderRadius: '20px', 
-          fontSize: '0.75rem', 
-          fontWeight: 600,
-          background: task.priority === 'high' ? 'rgba(244, 63, 94, 0.1)' : task.priority === 'medium' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(16, 185, 129, 0.1)',
-          color: task.priority === 'high' ? 'var(--accent)' : task.priority === 'medium' ? '#f59e0b' : '#10b981',
-          textTransform: 'uppercase'
-        }}>
-          {task.priority}
-        </span>
-        <button onClick={deleteTask} style={{ background: 'transparent', color: 'rgba(255, 255, 255, 0.15)' }}>
-          <Trash2 size={18} />
-        </button>
-      </div>
+      {!isEditing && task.remarks && (
+        <p style={{ marginLeft: '44px', marginTop: '4px', fontSize: '0.9rem', color: 'var(--text-muted)', fontStyle: 'italic', background: 'rgba(255,255,255,0.03)', padding: '8px 12px', borderRadius: '8px' }}>
+          "{task.remarks}"
+        </p>
+      )}
     </motion.div>
   )
 }
