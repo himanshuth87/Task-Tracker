@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import { supabase } from './supabase'
 import { motion } from 'framer-motion'
-import { LogIn, UserPlus, Mail, Lock, Loader2 } from 'lucide-react'
+import { LogIn, UserPlus, Mail, Lock, Loader2, User, Users } from 'lucide-react'
 
 export function Auth() {
   const [loading, setLoading] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [fullName, setFullName] = useState('')
+  const [teamName, setTeamName] = useState('General')
   const [isSignUp, setIsSignUp] = useState(false)
 
   const handleAuth = async (e: React.FormEvent) => {
@@ -14,9 +16,31 @@ export function Auth() {
     setLoading(true)
     
     if (isSignUp) {
-      const { error } = await supabase.auth.signUp({ email, password })
-      if (error) alert(error.message)
-      else alert('Check your email for the confirmation link!')
+      const { data, error } = await supabase.auth.signUp({ 
+        email, 
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+            team_name: teamName
+          }
+        }
+      })
+      
+      if (error) {
+        alert(error.message)
+      } else if (data.user) {
+        // Create profile entry
+        await supabase.from('profiles').insert([
+          { 
+            id: data.user.id, 
+            full_name: fullName, 
+            team_name: teamName 
+          }
+        ])
+        alert('Account created! Please sign in.')
+        setIsSignUp(false)
+      }
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) alert(error.message)
@@ -30,18 +54,54 @@ export function Auth() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="glass-card" 
-        style={{ padding: '40px', width: '100%', maxWidth: '400px' }}
+        style={{ padding: '40px', width: '100%', maxWidth: '420px' }}
       >
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <h2 className="gradient-text" style={{ fontSize: '2rem', fontWeight: 700 }}>
-            {isSignUp ? 'Create Account' : 'Welcome Back'}
+            {isSignUp ? 'Join the Team' : 'Welcome Back'}
           </h2>
           <p style={{ color: 'var(--text-muted)', marginTop: '8px' }}>
-            {isSignUp ? 'Sign up to start tracking your tasks' : 'Sign in to access your dashboard'}
+            {isSignUp ? 'Create your professional profile' : 'Sign in to access your dashboard'}
           </p>
         </div>
 
         <form onSubmit={handleAuth} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          {isSignUp && (
+            <>
+              <div>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                  <User size={16} /> Full Name
+                </label>
+                <input 
+                  required 
+                  value={fullName} 
+                  onChange={e => setFullName(e.target.value)} 
+                  placeholder="John Doe"
+                  style={{ width: '100%' }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                  <Users size={16} /> Select Team
+                </label>
+                <select 
+                  required 
+                  value={teamName} 
+                  onChange={e => setTeamName(e.target.value)}
+                  style={{ width: '100%' }}
+                >
+                  <option value="General">General</option>
+                  <option value="Marketing">Marketing</option>
+                  <option value="Sales">Sales</option>
+                  <option value="Operations">Operations</option>
+                  <option value="IT/Tech">IT / Tech</option>
+                  <option value="HR">HR</option>
+                  <option value="Management">Management</option>
+                </select>
+              </div>
+            </>
+          )}
+
           <div>
             <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
               <Mail size={16} /> Email Address
@@ -51,7 +111,7 @@ export function Auth() {
               type="email" 
               value={email} 
               onChange={e => setEmail(e.target.value)} 
-              placeholder="name@example.com"
+              placeholder="name@company.com"
               style={{ width: '100%' }}
             />
           </div>
@@ -85,7 +145,7 @@ export function Auth() {
             }}
           >
             {loading ? <Loader2 className="animate-spin" size={20} /> : (isSignUp ? <UserPlus size={20} /> : <LogIn size={20} />)}
-            {isSignUp ? 'Sign Up' : 'Sign In'}
+            {isSignUp ? 'Create Account' : 'Sign In'}
           </button>
         </form>
 
