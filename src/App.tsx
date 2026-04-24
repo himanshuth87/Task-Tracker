@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Plus, CheckCircle2, Circle, Clock, User, Calendar, Trash2, Filter, BarChart3, ChevronRight, Edit2, X, Check, LogOut, Bell } from 'lucide-react'
+import { Plus, CheckCircle2, Circle, Clock, User, Calendar, Trash2, Filter, BarChart3, ChevronRight, Edit2, X, Check, LogOut, Bell, Download, Users, Briefcase, Zap, Mail } from 'lucide-react'
+import * as XLSX from 'xlsx'
 import { motion, AnimatePresence } from 'framer-motion'
 import './App.css'
 import { supabase, type Task } from './supabase'
@@ -12,6 +13,8 @@ function App() {
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [filter, setFilter] = useState<'all' | 'pending' | 'completed'>('all')
+  const [viewMode, setViewMode] = useState<'personal' | 'team'>('personal')
+  const [isLive, setIsLive] = useState(false)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -28,19 +31,46 @@ function App() {
   }, [])
 
   useEffect(() => {
+    if (!session) return
+
+    const channel = supabase
+      .channel('tasks_changes')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'tasks' 
+      }, () => {
+        fetchTasks()
+      })
+      .subscribe((status) => {
+        setIsLive(status === 'SUBSCRIBED')
+      })
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [session, viewMode])
+
+  useEffect(() => {
     if (session) {
       fetchTasks()
     }
-  }, [session])
+  }, [session, viewMode])
 
   async function fetchTasks() {
     if (!session) return
     setLoading(true)
-    const { data, error } = await supabase
+    
+    let query = supabase
       .from('tasks')
       .select('*')
-      .eq('user_id', session.user.id)
       .order('created_at', { ascending: false })
+
+    if (viewMode === 'personal') {
+      query = query.eq('user_id', session.user.id)
+    }
+
+    const { data, error } = await query
 
     if (error) {
       console.error('Error fetching tasks:', error)
@@ -77,6 +107,50 @@ function App() {
     return diffDays
   }
 
+  const downloadExcel = () => {
+    const dataToExport = tasks.map(t => ({
+      'Task Title': t.title,
+      'Status': t.status,
+      'Priority': t.priority,
+      'Task Giver': t.task_giver,
+      'Owner': t.user_email || t.user_id,
+      'Start Date': t.start_date || 'N/A',
+      'Deadline': t.deadline || 'N/A',
+      'Pending Days': getDaysRemaining(t.deadline) ?? 'N/A',
+      'Remarks': t.remarks || ''
+    }))
+
+    const ws = XLSX.utils.json_to_sheet(dataToExport)
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'Tasks')
+    XLSX.writeFile(wb, `TaskTracker_Export_${new Date().toISOString().split('T')[0]}.xlsx`)
+  }
+
+  const addToOutlook = (task: Task) => {
+    const start = task.start_date ? task.start_date.replace(/-/g, '') : new Date().toISOString().split('T')[0].replace(/-/g, '')
+    const end = task.deadline ? task.deadline.replace(/-/g, '') : start
+    
+    const icsContent = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'BEGIN:VEVENT',
+      `SUMMARY:${task.title}`,
+      `DTSTART:${start}T090000Z`,
+      `DTEND:${end}T180000Z`,
+      `DESCRIPTION:${task.remarks || ''}`,
+      'END:VEVENT',
+      'END:VCALENDAR'
+    ].join('\n')
+
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' })
+    const link = document.createElement('a')
+    link.href = window.URL.createObjectURL(blob)
+    link.setAttribute('download', `${task.title.replace(/\s+/g, '_')}.ics`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
   if (!session) {
     return <Auth />
   }
@@ -85,34 +159,43 @@ function App() {
     <div className="app-container">
       <header className="header">
         <div>
-          <h1 className="gradient-text" style={{ fontSize: '2.5rem', fontWeight: 700 }}>TaskTracker</h1>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <p style={{ color: 'var(--text-muted)' }}>{session.user.email}</p>
+            <h1 className="gradient-text" style={{ fontSize: '2.5rem', fontWeight: 700 }}>TaskTracker</h1>
+            {isLive && (
+              <div className="live-badge">
+                <Zap size={12} fill="#10b981" />
+                <span>LIVE</span>
+              </div>
+            )}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>{session.user.email}</p>
+            <span style={{ color: 'var(--glass-border)' }}>|</span>
             <button 
               onClick={() => supabase.auth.signOut()}
-              style={{ background: 'transparent', color: 'var(--accent)', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+              style={{ background: 'transparent', color: 'var(--accent)', fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}
             >
               <LogOut size={14} /> Sign Out
             </button>
           </div>
         </div>
-        <button 
-          onClick={() => setShowForm(!showForm)}
-          className="primary-gradient"
-          style={{ 
-            padding: '12px 24px', 
-            borderRadius: '14px', 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '8px',
-            fontWeight: 600,
-            color: 'white',
-            boxShadow: '0 10px 20px -5px var(--primary-glow)'
-          }}
-        >
-          <Plus size={20} />
-          {showForm ? 'Close' : 'New Task'}
-        </button>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button 
+            onClick={downloadExcel}
+            className="glass-card action-btn"
+            title="Export to Excel"
+          >
+            <Download size={20} />
+            <span>Export</span>
+          </button>
+          <button 
+            onClick={() => setShowForm(!showForm)}
+            className="primary-gradient action-btn main-action"
+          >
+            <Plus size={20} />
+            {showForm ? 'Close' : 'New Task'}
+          </button>
+        </div>
       </header>
 
       <AnimatePresence>
@@ -135,7 +218,7 @@ function App() {
             <div style={{ background: 'rgba(245, 158, 11, 0.2)', padding: '10px', borderRadius: '12px', color: '#f59e0b' }}>
               <Bell size={20} className="animate-bounce" />
             </div>
-            <div>
+            <div style={{ flex: 1 }}>
               <h4 style={{ color: '#f59e0b', fontWeight: 600 }}>Reminder: You have {tasksDueSoon.length} tasks due soon!</h4>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Tasks expiring in less than 2 days are highlighted in your list.</p>
             </div>
@@ -154,6 +237,17 @@ function App() {
               <StatItem label="Total Tasks" value={stats.total} color="var(--primary)" />
               <StatItem label="Completed" value={stats.completed} color="#10b981" />
               <StatItem label="Pending" value={stats.pending} color="#f59e0b" />
+            </div>
+          </div>
+
+          <div className="glass-card" style={{ padding: '24px', marginBottom: '24px' }}>
+            <h3 style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Users size={18} color="var(--primary)" />
+              View Mode
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <FilterBtn active={viewMode === 'personal'} onClick={() => setViewMode('personal')} label="My Tasks" icon={<Briefcase size={16} />} />
+              <FilterBtn active={viewMode === 'team'} onClick={() => setViewMode('team')} label="Team View" icon={<Users size={16} />} />
             </div>
           </div>
 
@@ -179,21 +273,25 @@ function App() {
                 exit={{ opacity: 0, y: -20 }}
                 style={{ marginBottom: '32px' }}
               >
-                <TaskForm onTaskAdded={fetchTasks} userId={session.user.id} />
+                <TaskForm onTaskAdded={fetchTasks} userId={session.user.id} userEmail={session.user.email} />
               </motion.div>
             )}
           </AnimatePresence>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {loading ? (
-              <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '40px' }}>Loading tasks...</p>
+              <div style={{ textAlign: 'center', padding: '60px' }}>
+                <div className="loader"></div>
+                <p style={{ color: 'var(--text-muted)', marginTop: '20px' }}>Syncing team tasks...</p>
+              </div>
             ) : filteredTasks.length > 0 ? (
               filteredTasks.map(task => (
-                <TaskItem key={task.id} task={task} onUpdate={fetchTasks} />
+                <TaskItem key={task.id} task={task} onUpdate={fetchTasks} onAddToCalendar={() => addToOutlook(task)} currentUserId={session.user.id} />
               ))
             ) : (
-              <div className="glass-card" style={{ padding: '60px', textAlign: 'center' }}>
-                <p style={{ color: 'var(--text-muted)' }}>No tasks found in this category.</p>
+              <div className="glass-card" style={{ padding: '80px 40px', textAlign: 'center' }}>
+                <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>No tasks found in this category.</p>
+                <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: '0.9rem', marginTop: '8px' }}>Create a new task to get started!</p>
               </div>
             )}
           </div>
@@ -207,34 +305,38 @@ function StatItem({ label, value, color }: { label: string, value: number, color
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
       <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>{label}</span>
-      <span style={{ fontWeight: 700, color }}>{value}</span>
+      <span style={{ fontWeight: 700, color, fontSize: '1.1rem' }}>{value}</span>
     </div>
   )
 }
 
-function FilterBtn({ active, onClick, label }: { active: boolean, onClick: () => void, label: string }) {
+function FilterBtn({ active, onClick, label, icon }: { active: boolean, onClick: () => void, label: string, icon?: React.ReactNode }) {
   return (
     <button
       onClick={onClick}
       style={{
         width: '100%',
         textAlign: 'left',
-        padding: '10px 16px',
-        borderRadius: '10px',
+        padding: '12px 16px',
+        borderRadius: '12px',
         background: active ? 'rgba(99, 102, 241, 0.15)' : 'transparent',
         color: active ? 'var(--primary)' : 'var(--text-muted)',
         display: 'flex',
         justifyContent: 'space-between',
-        alignItems: 'center'
+        alignItems: 'center',
+        fontWeight: active ? 600 : 400
       }}
     >
-      {label}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        {icon}
+        {label}
+      </div>
       {active && <ChevronRight size={16} />}
     </button>
   )
 }
 
-function TaskForm({ onTaskAdded, userId }: { onTaskAdded: () => void, userId: string }) {
+function TaskForm({ onTaskAdded, userId, userEmail }: { onTaskAdded: () => void, userId: string, userEmail?: string }) {
   const [title, setTitle] = useState('')
   const [giver, setGiver] = useState('')
   const [startDate, setStartDate] = useState('')
@@ -255,7 +357,8 @@ function TaskForm({ onTaskAdded, userId }: { onTaskAdded: () => void, userId: st
       remarks,
       priority,
       status: 'pending',
-      user_id: userId
+      user_id: userId,
+      user_email: userEmail
     }])
 
     if (error) {
@@ -345,7 +448,7 @@ function TaskForm({ onTaskAdded, userId }: { onTaskAdded: () => void, userId: st
   )
 }
 
-function TaskItem({ task, onUpdate }: { task: Task, onUpdate: () => void }) {
+function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId }: { task: Task, onUpdate: () => void, onAddToCalendar: () => void, currentUserId: string }) {
   const [isEditing, setIsEditing] = useState(false)
   const [editedTask, setEditedTask] = useState({ ...task })
 
@@ -385,6 +488,7 @@ function TaskItem({ task, onUpdate }: { task: Task, onUpdate: () => void }) {
 
   const daysRemaining = getDaysRemaining(task.deadline)
   const isDueSoon = task.status !== 'completed' && daysRemaining !== null && daysRemaining >= 0 && daysRemaining <= 2
+  const isOwner = task.user_id === currentUserId
 
   function getDaysRemaining(deadline: string | null) {
     if (!deadline) return null
@@ -401,9 +505,9 @@ function TaskItem({ task, onUpdate }: { task: Task, onUpdate: () => void }) {
       layout
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="glass-card" 
+      className="glass-card task-card" 
       style={{ 
-        padding: '20px 24px', 
+        padding: '24px', 
         display: 'flex', 
         flexDirection: 'column',
         gap: '16px',
@@ -414,24 +518,36 @@ function TaskItem({ task, onUpdate }: { task: Task, onUpdate: () => void }) {
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
         <button onClick={toggleStatus} style={{ background: 'transparent', color: task.status === 'completed' ? '#10b981' : 'var(--text-muted)' }}>
-          {task.status === 'completed' ? <CheckCircle2 size={24} /> : <Circle size={24} />}
+          {task.status === 'completed' ? <CheckCircle2 size={26} /> : <Circle size={26} />}
         </button>
 
         <div style={{ flex: 1 }}>
           {isEditing ? (
             <input 
-              style={{ width: '100%', fontSize: '1.1rem', fontWeight: 600, background: 'rgba(255,255,255,0.1)' }}
+              style={{ width: '100%', fontSize: '1.2rem', fontWeight: 600, background: 'rgba(255,255,255,0.1)' }}
               value={editedTask.title}
               onChange={e => setEditedTask({ ...editedTask, title: e.target.value })}
             />
           ) : (
-            <h4 style={{ 
-              fontSize: '1.1rem', 
-              fontWeight: 600, 
-              textDecoration: task.status === 'completed' ? 'line-through' : 'none',
-            }}>
-              {task.title}
-            </h4>
+            <div>
+              <h4 style={{ 
+                fontSize: '1.2rem', 
+                fontWeight: 600, 
+                textDecoration: task.status === 'completed' ? 'line-through' : 'none',
+              }}>
+                {task.title}
+              </h4>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                <span className={`priority-badge ${task.priority}`}>
+                  {task.priority}
+                </span>
+                {task.user_email && (
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: '10px' }}>
+                    @{task.user_email.split('@')[0]}
+                  </span>
+                )}
+              </div>
+            </div>
           )}
         </div>
 
@@ -443,29 +559,28 @@ function TaskItem({ task, onUpdate }: { task: Task, onUpdate: () => void }) {
             </>
           ) : (
             <>
-              <span style={{ 
-                padding: '4px 10px', 
-                borderRadius: '20px', 
-                fontSize: '0.75rem', 
-                fontWeight: 600,
-                background: task.priority === 'high' ? 'rgba(244, 63, 94, 0.1)' : task.priority === 'medium' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(16, 185, 129, 0.1)',
-                color: task.priority === 'high' ? 'var(--accent)' : task.priority === 'medium' ? '#f59e0b' : '#10b981',
-                textTransform: 'uppercase'
-              }}>
-                {task.priority}
-              </span>
-              <button onClick={() => setIsEditing(true)} style={{ background: 'transparent', color: 'rgba(255, 255, 255, 0.4)' }}>
-                <Edit2 size={18} />
+              <button onClick={onAddToCalendar} title="Add to Calendar" style={{ background: 'transparent', color: 'var(--primary)', opacity: 0.8 }}>
+                <Calendar size={20} />
               </button>
-              <button onClick={deleteTask} style={{ background: 'transparent', color: 'rgba(255, 255, 255, 0.15)' }}>
-                <Trash2 size={18} />
+              <button onClick={() => window.open(`mailto:?subject=Task Reminder: ${task.title}&body=Reminder for task: ${task.title}%0D%0AStatus: ${task.status}%0D%0ADeadline: ${task.deadline}`)} title="Send Mail Reminder" style={{ background: 'transparent', color: 'var(--text-muted)', opacity: 0.6 }}>
+                <Mail size={20} />
               </button>
+              {isOwner && (
+                <>
+                  <button onClick={() => setIsEditing(true)} style={{ background: 'transparent', color: 'rgba(255, 255, 255, 0.4)' }}>
+                    <Edit2 size={18} />
+                  </button>
+                  <button onClick={deleteTask} style={{ background: 'transparent', color: 'rgba(255, 255, 255, 0.15)' }}>
+                    <Trash2 size={18} />
+                  </button>
+                </>
+              )}
             </>
           )}
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', paddingLeft: '44px' }}>
+      <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', paddingLeft: '46px' }}>
         {isEditing ? (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', width: '100%' }}>
             <input placeholder="Giver" value={editedTask.task_giver} onChange={e => setEditedTask({ ...editedTask, task_giver: e.target.value })} />
@@ -484,36 +599,31 @@ function TaskItem({ task, onUpdate }: { task: Task, onUpdate: () => void }) {
           </div>
         ) : (
           <>
-            <small style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--text-muted)' }}>
-              <User size={14} /> {task.task_giver}
-            </small>
-            <small style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--text-muted)' }}>
+            <div className="meta-info">
+              <User size={14} /> 
+              <span>By: {task.task_giver}</span>
+            </div>
+            <div className="meta-info">
               <Calendar size={14} /> 
-              {task.start_date ? `Start: ${task.start_date}` : ''} 
-              {task.start_date && task.deadline ? ' | ' : ''}
-              {task.deadline ? `End: ${task.deadline}` : ''}
-            </small>
+              <span>{task.start_date || 'N/A'} → {task.deadline || 'N/A'}</span>
+            </div>
             {daysRemaining !== null && (
-              <small style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '4px', 
-                color: daysRemaining < 0 ? 'var(--accent)' : daysRemaining <= 2 ? '#f59e0b' : 'var(--text-muted)',
-                fontWeight: daysRemaining <= 2 ? 700 : 400
-              }}>
+              <div className={`meta-info ${daysRemaining < 0 ? 'overdue' : daysRemaining <= 2 ? 'warning' : ''}`}>
                 <Clock size={14} /> 
-                {daysRemaining === 0 ? 'Due Today' : daysRemaining < 0 ? `${Math.abs(daysRemaining)} days overdue` : `${daysRemaining} days left`}
-                {isDueSoon && <span style={{ marginLeft: '8px', background: '#f59e0b', color: '#000', padding: '1px 6px', borderRadius: '4px', fontSize: '0.65rem', fontWeight: 800 }}>REMINDER</span>}
-              </small>
+                <span>
+                  {daysRemaining === 0 ? 'Due Today' : daysRemaining < 0 ? `${Math.abs(daysRemaining)} days overdue` : `${daysRemaining} days left`}
+                </span>
+                {isDueSoon && <span className="reminder-tag">URGENT</span>}
+              </div>
             )}
           </>
         )}
       </div>
 
       {!isEditing && task.remarks && (
-        <p style={{ marginLeft: '44px', marginTop: '4px', fontSize: '0.9rem', color: 'var(--text-muted)', fontStyle: 'italic', background: 'rgba(255,255,255,0.03)', padding: '8px 12px', borderRadius: '8px' }}>
-          "{task.remarks}"
-        </p>
+        <div className="task-remarks">
+          <p>"{task.remarks}"</p>
+        </div>
       )}
     </motion.div>
   )
