@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, CheckCircle2, Circle, Clock, User, Calendar, Trash2, Filter, BarChart3, ChevronRight, Edit2, X, Check, LogOut, Bell, Download, Users, Briefcase, Zap, Mail } from 'lucide-react'
+import { Plus, CheckCircle2, Circle, Clock, User, Calendar, Trash2, Filter, BarChart3, ChevronRight, Edit2, X, Check, LogOut, Bell, Download, Users, Briefcase, Zap, Mail, UserCheck } from 'lucide-react'
 import * as XLSX from 'xlsx'
 import { motion, AnimatePresence } from 'framer-motion'
 import './App.css'
@@ -12,9 +12,11 @@ function App() {
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
-  const [filter, setFilter] = useState<'all' | 'pending' | 'completed'>('all')
+  const [showNotifications, setShowNotifications] = useState(false)
+  const [filter, setFilter] = useState<'all' | 'pending' | 'completed' | 'assigned_to_me'>('all')
   const [viewMode, setViewMode] = useState<'personal' | 'team'>('personal')
   const [isLive, setIsLive] = useState(false)
+  const [unreadCount, setUnreadCount] = useState(0)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -39,12 +41,27 @@ function App() {
         event: '*', 
         schema: 'public', 
         table: 'tasks' 
-      }, () => {
+      }, (payload) => {
+        // Show in-app alert if new task is assigned to current user
+        if (payload.eventType === 'INSERT' && payload.new.assigned_to_email === session.user.email) {
+          setUnreadCount(prev => prev + 1)
+          if ("Notification" in window && Notification.permission === "granted") {
+            new Notification("New Task Assigned!", {
+              body: `Task: ${payload.new.title}\nAssigned by: ${payload.new.task_giver}`,
+              icon: '/vite.svg'
+            });
+          }
+        }
         fetchTasks()
       })
       .subscribe((status) => {
         setIsLive(status === 'SUBSCRIBED')
       })
+
+    // Request browser notification permission
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
 
     return () => {
       supabase.removeChannel(channel)
@@ -55,7 +72,7 @@ function App() {
     if (session) {
       fetchTasks()
     }
-  }, [session, viewMode])
+  }, [session, viewMode, filter])
 
   async function fetchTasks() {
     if (!session) return
@@ -67,7 +84,11 @@ function App() {
       .order('created_at', { ascending: false })
 
     if (viewMode === 'personal') {
-      query = query.eq('user_id', session.user.id)
+      if (filter === 'assigned_to_me') {
+        query = query.eq('assigned_to_email', session.user.email)
+      } else {
+        query = query.eq('user_id', session.user.id)
+      }
     }
 
     const { data, error } = await query
@@ -81,7 +102,7 @@ function App() {
   }
 
   const filteredTasks = tasks.filter(task => {
-    if (filter === 'all') return true
+    if (filter === 'all' || filter === 'assigned_to_me') return true
     return task.status === filter
   })
 
@@ -114,7 +135,7 @@ function App() {
       'Priority': t.priority,
       'Assigned By': t.task_giver,
       'Task Owner': t.user_email?.split('@')[0] || 'Unknown',
-      'Full Email': t.user_email || 'N/A',
+      'Assigned To': (t as any).assigned_to_email || 'Unassigned',
       'Team': (t as any).team_name || 'General',
       'Start Date': t.start_date || 'N/A',
       'Deadline': t.deadline || 'N/A',
@@ -193,7 +214,42 @@ function App() {
             </button>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: '12px' }}>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <div style={{ position: 'relative' }}>
+            <button 
+              onClick={() => {setShowNotifications(!showNotifications); setUnreadCount(0)}}
+              className={`glass-card action-btn ${unreadCount > 0 ? 'pulse' : ''}`}
+              title="Notifications"
+            >
+              <Bell size={20} color={unreadCount > 0 ? 'var(--primary)' : 'white'} />
+              {unreadCount > 0 && <span className="notification-dot">{unreadCount}</span>}
+            </button>
+            <AnimatePresence>
+              {showNotifications && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                  className="glass-card notification-dropdown"
+                >
+                  <h4>Recent Activity</h4>
+                  <div className="notification-list">
+                    {unreadCount > 0 ? (
+                      <div className="notification-item unread">
+                        <UserCheck size={14} />
+                        <div>
+                          <p>New Task Assigned to you!</p>
+                          <span>Check "Assigned to Me" filter</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="empty-notif">No new notifications</p>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
           <button 
             onClick={downloadExcel}
             className="glass-card action-btn"
@@ -260,7 +316,8 @@ function App() {
               View Mode
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <FilterBtn active={viewMode === 'personal'} onClick={() => setViewMode('personal')} label="My Tasks" icon={<Briefcase size={16} />} />
+              <FilterBtn active={viewMode === 'personal' && filter !== 'assigned_to_me'} onClick={() => {setViewMode('personal'); setFilter('all')}} label="My Tasks" icon={<Briefcase size={16} />} />
+              <FilterBtn active={filter === 'assigned_to_me'} onClick={() => {setViewMode('personal'); setFilter('assigned_to_me')}} label="Assigned to Me" icon={<UserCheck size={16} />} />
               <FilterBtn active={viewMode === 'team'} onClick={() => setViewMode('team')} label="Team View" icon={<Users size={16} />} />
             </div>
           </div>
@@ -271,9 +328,9 @@ function App() {
               Filters
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <FilterBtn active={filter === 'all'} onClick={() => setFilter('all')} label="All Tasks" />
-              <FilterBtn active={filter === 'pending'} onClick={() => setFilter('pending')} label="Active" />
-              <FilterBtn active={filter === 'completed'} onClick={() => setFilter('completed')} label="Completed" />
+              <FilterBtn active={filter === 'all'} onClick={() => setFilter('all')} label="All Status" />
+              <FilterBtn active={filter === 'pending'} onClick={() => setFilter('pending')} label="Active Only" />
+              <FilterBtn active={filter === 'completed'} onClick={() => setFilter('completed')} label="Completed Only" />
             </div>
           </div>
         </aside>
@@ -358,6 +415,7 @@ function FilterBtn({ active, onClick, label, icon }: { active: boolean, onClick:
 function TaskForm({ onTaskAdded, userId, userEmail, teamName }: { onTaskAdded: () => void, userId: string, userEmail?: string, teamName?: string }) {
   const [title, setTitle] = useState('')
   const [giver, setGiver] = useState('')
+  const [assignedTo, setAssignedTo] = useState('')
   const [startDate, setStartDate] = useState('')
   const [deadline, setDeadline] = useState('')
   const [remarks, setRemarks] = useState('')
@@ -371,6 +429,7 @@ function TaskForm({ onTaskAdded, userId, userEmail, teamName }: { onTaskAdded: (
     const { error } = await supabase.from('tasks').insert([{
       title,
       task_giver: giver,
+      assigned_to_email: assignedTo || userEmail,
       start_date: startDate,
       deadline,
       remarks,
@@ -386,6 +445,7 @@ function TaskForm({ onTaskAdded, userId, userEmail, teamName }: { onTaskAdded: (
     } else {
       setTitle('')
       setGiver('')
+      setAssignedTo('')
       setStartDate('')
       setDeadline('')
       setRemarks('')
@@ -408,12 +468,21 @@ function TaskForm({ onTaskAdded, userId, userEmail, teamName }: { onTaskAdded: (
           />
         </div>
         <div>
-          <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-muted)' }}>Task Giver</label>
+          <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-muted)' }}>Assigned By</label>
           <input 
             required 
             value={giver} 
             onChange={e => setGiver(e.target.value)} 
             placeholder="Who assigned this?" 
+            style={{ width: '100%' }}
+          />
+        </div>
+        <div>
+          <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-muted)' }}>Assign To (Email)</label>
+          <input 
+            value={assignedTo} 
+            onChange={e => setAssignedTo(e.target.value)} 
+            placeholder="Team member email" 
             style={{ width: '100%' }}
           />
         </div>
@@ -563,7 +632,12 @@ function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId }: { task: Ta
                 </span>
                 {task.user_email && (
                   <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: '10px' }}>
-                    @{task.user_email.split('@')[0]}
+                    Owner: @{task.user_email.split('@')[0]}
+                  </span>
+                )}
+                {(task as any).assigned_to_email && (
+                  <span style={{ fontSize: '0.75rem', color: '#10b981', background: 'rgba(16, 185, 129, 0.1)', padding: '2px 8px', borderRadius: '10px', fontWeight: 600 }}>
+                    Assigned: @{(task as any).assigned_to_email.split('@')[0]}
                   </span>
                 )}
                 {(task as any).team_name && (
@@ -587,7 +661,7 @@ function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId }: { task: Ta
               <button onClick={onAddToCalendar} title="Add to Calendar" style={{ background: 'transparent', color: 'var(--primary)', opacity: 0.8 }}>
                 <Calendar size={20} />
               </button>
-              <button onClick={() => window.open(`mailto:?subject=Task Reminder: ${task.title}&body=Reminder for task: ${task.title}%0D%0AStatus: ${task.status}%0D%0ADeadline: ${task.deadline}`)} title="Send Mail Reminder" style={{ background: 'transparent', color: 'var(--text-muted)', opacity: 0.6 }}>
+              <button onClick={() => window.open(`mailto:${(task as any).assigned_to_email || ''}?subject=Task Update: ${task.title}&body=Update for task: ${task.title}%0D%0AStatus: ${task.status}%0D%0ADeadline: ${task.deadline}`)} title="Contact Assignee" style={{ background: 'transparent', color: 'var(--text-muted)', opacity: 0.6 }}>
                 <Mail size={20} />
               </button>
               {isOwner && (
