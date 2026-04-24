@@ -116,10 +116,21 @@ function App() {
     return days !== null && days >= 0 && days <= 2
   })
 
+  // Robust formatting: Day/Month/Year
   function formatDate(dateStr: string | null) {
     if (!dateStr) return 'N/A'
-    const [year, month, day] = dateStr.split('-')
-    return `${day}/${month}/${year}`
+    try {
+      const date = new Date(dateStr)
+      if (isNaN(date.getTime())) return dateStr // Return original if invalid
+      
+      const day = String(date.getDate()).padStart(2, '0')
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const year = date.getFullYear()
+      
+      return `${day}/${month}/${year}`
+    } catch (e) {
+      return dateStr
+    }
   }
 
   function getDaysRemaining(deadline: string | null) {
