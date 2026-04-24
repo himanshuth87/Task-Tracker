@@ -18,6 +18,7 @@ export type Task = {
   category: string;
   created_at: string;
   user_id: string;
+  user_email?: string;
   task_giver: string;
   deadline: string | null;
   start_date: string | null;
