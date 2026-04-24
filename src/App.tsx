@@ -42,7 +42,6 @@ function App() {
         schema: 'public', 
         table: 'tasks' 
       }, (payload) => {
-        // Show in-app alert if new task is assigned to current user
         if (payload.eventType === 'INSERT' && payload.new.assigned_to_email === session.user.email) {
           setUnreadCount(prev => prev + 1)
           if ("Notification" in window && Notification.permission === "granted") {
@@ -58,7 +57,6 @@ function App() {
         setIsLive(status === 'SUBSCRIBED')
       })
 
-    // Request browser notification permission
     if ("Notification" in window && Notification.permission === "default") {
       Notification.requestPermission();
     }
@@ -118,6 +116,12 @@ function App() {
     return days !== null && days >= 0 && days <= 2
   })
 
+  function formatDate(dateStr: string | null) {
+    if (!dateStr) return 'N/A'
+    const [year, month, day] = dateStr.split('-')
+    return `${day}/${month}/${year}`
+  }
+
   function getDaysRemaining(deadline: string | null) {
     if (!deadline) return null
     const today = new Date()
@@ -137,8 +141,8 @@ function App() {
       'Task Owner': t.user_email?.split('@')[0] || 'Unknown',
       'Assigned To': (t as any).assigned_to_email || 'Unassigned',
       'Team': (t as any).team_name || 'General',
-      'Start Date': t.start_date || 'N/A',
-      'Deadline': t.deadline || 'N/A',
+      'Start Date': formatDate(t.start_date),
+      'Deadline': formatDate(t.deadline),
       'Pending Days': getDaysRemaining(t.deadline) ?? 'N/A',
       'Remarks': t.remarks || ''
     }))
@@ -348,6 +352,7 @@ function App() {
                   onTaskAdded={fetchTasks} 
                   userId={session.user.id} 
                   userEmail={session.user.email} 
+                  fullName={session.user.user_metadata.full_name}
                   teamName={session.user.user_metadata.team_name} 
                 />
               </motion.div>
@@ -362,7 +367,7 @@ function App() {
               </div>
             ) : filteredTasks.length > 0 ? (
               filteredTasks.map(task => (
-                <TaskItem key={task.id} task={task} onUpdate={fetchTasks} onAddToCalendar={() => addToOutlook(task)} currentUserId={session.user.id} />
+                <TaskItem key={task.id} task={task} onUpdate={fetchTasks} onAddToCalendar={() => addToOutlook(task)} currentUserId={session.user.id} formatDate={formatDate} />
               ))
             ) : (
               <div className="glass-card" style={{ padding: '80px 40px', textAlign: 'center' }}>
@@ -412,9 +417,9 @@ function FilterBtn({ active, onClick, label, icon }: { active: boolean, onClick:
   )
 }
 
-function TaskForm({ onTaskAdded, userId, userEmail, teamName }: { onTaskAdded: () => void, userId: string, userEmail?: string, teamName?: string }) {
+function TaskForm({ onTaskAdded, userId, userEmail, fullName, teamName }: { onTaskAdded: () => void, userId: string, userEmail?: string, fullName?: string, teamName?: string }) {
   const [title, setTitle] = useState('')
-  const [giver, setGiver] = useState('')
+  const [giver, setGiver] = useState(fullName || '')
   const [assignedTo, setAssignedTo] = useState('')
   const [startDate, setStartDate] = useState('')
   const [deadline, setDeadline] = useState('')
@@ -444,7 +449,7 @@ function TaskForm({ onTaskAdded, userId, userEmail, teamName }: { onTaskAdded: (
       alert('Error adding task: ' + error.message)
     } else {
       setTitle('')
-      setGiver('')
+      setGiver(fullName || '')
       setAssignedTo('')
       setStartDate('')
       setDeadline('')
@@ -537,7 +542,7 @@ function TaskForm({ onTaskAdded, userId, userEmail, teamName }: { onTaskAdded: (
   )
 }
 
-function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId }: { task: Task, onUpdate: () => void, onAddToCalendar: () => void, currentUserId: string }) {
+function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId, formatDate }: { task: Task, onUpdate: () => void, onAddToCalendar: () => void, currentUserId: string, formatDate: (d: string | null) => string }) {
   const [isEditing, setIsEditing] = useState(false)
   const [editedTask, setEditedTask] = useState({ ...task })
 
@@ -704,7 +709,7 @@ function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId }: { task: Ta
             </div>
             <div className="meta-info">
               <Calendar size={14} /> 
-              <span>{task.start_date || 'N/A'} → {task.deadline || 'N/A'}</span>
+              <span>{formatDate(task.start_date)} → {formatDate(task.deadline)}</span>
             </div>
             {daysRemaining !== null && (
               <div className={`meta-info ${daysRemaining < 0 ? 'overdue' : daysRemaining <= 2 ? 'warning' : ''}`}>
