@@ -8,7 +8,7 @@ export function Auth() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')
-  const [teamName, setTeamName] = useState('General')
+  const [teamName, setTeamName] = useState('')
   const [isSignUp, setIsSignUp] = useState(false)
 
   const handleAuth = async (e: React.FormEvent) => {
@@ -22,7 +22,7 @@ export function Auth() {
         options: {
           data: {
             full_name: fullName,
-            team_name: teamName
+            team_name: teamName || 'General'
           }
         }
       })
@@ -35,7 +35,7 @@ export function Auth() {
           { 
             id: data.user.id, 
             full_name: fullName, 
-            team_name: teamName 
+            team_name: teamName || 'General' 
           }
         ])
         alert('Account created! Please sign in.')
@@ -76,28 +76,21 @@ export function Auth() {
                   required 
                   value={fullName} 
                   onChange={e => setFullName(e.target.value)} 
-                  placeholder="John Doe"
+                  placeholder="e.g. Himanshu Thakur"
                   style={{ width: '100%' }}
                 />
               </div>
               <div>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-                  <Users size={16} /> Select Team
+                  <Users size={16} /> Team Name
                 </label>
-                <select 
+                <input 
                   required 
                   value={teamName} 
-                  onChange={e => setTeamName(e.target.value)}
+                  onChange={e => setTeamName(e.target.value)} 
+                  placeholder="e.g. Marketing, Sales, IT"
                   style={{ width: '100%' }}
-                >
-                  <option value="General">General</option>
-                  <option value="Marketing">Marketing</option>
-                  <option value="Sales">Sales</option>
-                  <option value="Operations">Operations</option>
-                  <option value="IT/Tech">IT / Tech</option>
-                  <option value="HR">HR</option>
-                  <option value="Management">Management</option>
-                </select>
+                />
               </div>
             </>
           )}
