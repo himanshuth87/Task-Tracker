@@ -112,8 +112,10 @@ function App() {
       'Task Title': t.title,
       'Status': t.status,
       'Priority': t.priority,
-      'Task Giver': t.task_giver,
-      'Owner': t.user_email || t.user_id,
+      'Assigned By': t.task_giver,
+      'Task Owner': t.user_email?.split('@')[0] || 'Unknown',
+      'Full Email': t.user_email || 'N/A',
+      'Team': (t as any).team_name || 'General',
       'Start Date': t.start_date || 'N/A',
       'Deadline': t.deadline || 'N/A',
       'Pending Days': getDaysRemaining(t.deadline) ?? 'N/A',
@@ -122,25 +124,34 @@ function App() {
 
     const ws = XLSX.utils.json_to_sheet(dataToExport)
     const wb = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(wb, ws, 'Tasks')
-    XLSX.writeFile(wb, `TaskTracker_Export_${new Date().toISOString().split('T')[0]}.xlsx`)
+    XLSX.utils.book_append_sheet(wb, ws, 'Team Tasks')
+    XLSX.writeFile(wb, `Team_Task_Report_${new Date().toISOString().split('T')[0]}.xlsx`)
   }
 
   const addToOutlook = (task: Task) => {
     const start = task.start_date ? task.start_date.replace(/-/g, '') : new Date().toISOString().split('T')[0].replace(/-/g, '')
     const end = task.deadline ? task.deadline.replace(/-/g, '') : start
+    const now = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'
+    const uid = `task-${task.id}@hscvpl.com`
     
     const icsContent = [
       'BEGIN:VCALENDAR',
       'VERSION:2.0',
+      'PRODID:-//HSCVPL//TaskTracker//EN',
+      'METHOD:PUBLISH',
       'BEGIN:VEVENT',
+      `UID:${uid}`,
+      `DTSTAMP:${now}`,
       `SUMMARY:${task.title}`,
-      `DTSTART:${start}T090000Z`,
-      `DTEND:${end}T180000Z`,
-      `DESCRIPTION:${task.remarks || ''}`,
+      `DTSTART;VALUE=DATE:${start}`,
+      `DTEND;VALUE=DATE:${end}`,
+      `DESCRIPTION:${task.remarks || ''}\n\nTask Giver: ${task.task_giver}`,
+      'STATUS:CONFIRMED',
+      'PRIORITY:3',
+      'TRANSP:OPAQUE',
       'END:VEVENT',
       'END:VCALENDAR'
-    ].join('\n')
+    ].join('\r\n')
 
     const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' })
     const link = document.createElement('a')
@@ -169,7 +180,10 @@ function App() {
             )}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>{session.user.email}</p>
+            <div>
+              <p style={{ color: 'white', fontSize: '1rem', fontWeight: 600 }}>{session.user.user_metadata.full_name || 'User'}</p>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{session.user.email} • <span style={{ color: 'var(--primary)' }}>{session.user.user_metadata.team_name || 'General'}</span></p>
+            </div>
             <span style={{ color: 'var(--glass-border)' }}>|</span>
             <button 
               onClick={() => supabase.auth.signOut()}
@@ -273,7 +287,12 @@ function App() {
                 exit={{ opacity: 0, y: -20 }}
                 style={{ marginBottom: '32px' }}
               >
-                <TaskForm onTaskAdded={fetchTasks} userId={session.user.id} userEmail={session.user.email} />
+                <TaskForm 
+                  onTaskAdded={fetchTasks} 
+                  userId={session.user.id} 
+                  userEmail={session.user.email} 
+                  teamName={session.user.user_metadata.team_name} 
+                />
               </motion.div>
             )}
           </AnimatePresence>
@@ -336,7 +355,7 @@ function FilterBtn({ active, onClick, label, icon }: { active: boolean, onClick:
   )
 }
 
-function TaskForm({ onTaskAdded, userId, userEmail }: { onTaskAdded: () => void, userId: string, userEmail?: string }) {
+function TaskForm({ onTaskAdded, userId, userEmail, teamName }: { onTaskAdded: () => void, userId: string, userEmail?: string, teamName?: string }) {
   const [title, setTitle] = useState('')
   const [giver, setGiver] = useState('')
   const [startDate, setStartDate] = useState('')
@@ -358,7 +377,8 @@ function TaskForm({ onTaskAdded, userId, userEmail }: { onTaskAdded: () => void,
       priority,
       status: 'pending',
       user_id: userId,
-      user_email: userEmail
+      user_email: userEmail,
+      team_name: teamName || 'General'
     }])
 
     if (error) {
@@ -544,6 +564,11 @@ function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId }: { task: Ta
                 {task.user_email && (
                   <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: '10px' }}>
                     @{task.user_email.split('@')[0]}
+                  </span>
+                )}
+                {(task as any).team_name && (
+                  <span style={{ fontSize: '0.75rem', color: 'var(--primary)', background: 'rgba(99, 102, 241, 0.1)', padding: '2px 8px', borderRadius: '10px' }}>
+                    {(task as any).team_name}
                   </span>
                 )}
               </div>
