@@ -120,14 +120,12 @@ function App() {
   function formatDate(dateStr: string | null) {
     if (!dateStr) return 'N/A'
     try {
-      const date = new Date(dateStr)
-      if (isNaN(date.getTime())) return dateStr // Return original if invalid
-      
-      const day = String(date.getDate()).padStart(2, '0')
-      const month = String(date.getMonth() + 1).padStart(2, '0')
-      const year = date.getFullYear()
-      
-      return `${day}/${month}/${year}`
+      // Handle YYYY-MM-DD
+      const parts = dateStr.split('-')
+      if (parts.length === 3) {
+        return `${parts[2]}/${parts[1]}/${parts[0]}`
+      }
+      return dateStr
     } catch (e) {
       return dateStr
     }
