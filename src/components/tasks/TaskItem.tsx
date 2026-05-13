@@ -1,19 +1,26 @@
 import { useState } from 'react'
-import { Calendar, Mail, Edit2, Trash2, Check, X, User, Clock, MessageCircle, ChevronDown, ChevronUp, AlertCircle, Loader2 } from 'lucide-react'
+import { Calendar, Mail, Edit2, Trash2, Check, X, User, Clock, MessageCircle, ChevronDown, ChevronUp, AlertCircle, Loader2, CheckSquare, Paperclip, Link2, History, Square } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { type Task, type TaskStatus } from '../../supabase'
 import { taskService } from '../../services/taskService'
 import { TaskComments } from './TaskComments'
+import { SubTaskList } from './SubTaskList'
+import { FileAttachments } from './FileAttachments'
+import { TaskDependencies } from './TaskDependencies'
+import { ActivityLogPanel } from './ActivityLogPanel'
 import { formatDate, getDaysRemaining } from '../../utils/dateUtils'
 
 interface TaskItemProps {
-  task: Task;
-  onUpdate: () => void;
-  onAddToCalendar: () => void;
-  currentUserId: string;
-  currentUserEmail: string;
-  currentUserName: string;
+  task: Task
+  onUpdate: () => void
+  onAddToCalendar: () => void
+  currentUserId: string
+  currentUserEmail: string
+  currentUserName: string
+  isSelected?: boolean
+  onToggleSelect?: (id: string) => void
+  bulkMode?: boolean
 }
 
 const STATUS_CONFIG: Record<TaskStatus, { label: string; color: string; bg: string; icon: React.ReactNode }> = {
@@ -27,13 +34,17 @@ const RECURRENCE_LABEL: Record<string, string> = {
   daily: '↻ Daily', weekly: '↻ Weekly', monthly: '↻ Monthly',
 }
 
-export function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId, currentUserEmail, currentUserName }: TaskItemProps) {
+type Panel = 'comments' | 'subtasks' | 'attachments' | 'dependencies' | 'activity' | null
+
+export function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId, currentUserEmail, currentUserName, isSelected, onToggleSelect, bulkMode }: TaskItemProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [editedTask, setEditedTask] = useState({ ...task })
-  const [showComments, setShowComments] = useState(false)
+  const [activePanel, setActivePanel] = useState<Panel>(null)
+
+  const togglePanel = (panel: Panel) => setActivePanel(p => p === panel ? null : panel)
 
   const cycleStatus = async () => {
-    const { error, nextStatus } = await taskService.cycleStatus(task)
+    const { error, nextStatus } = await taskService.cycleStatus(task, currentUserEmail, currentUserName)
     if (!error) {
       if (nextStatus === 'completed' && task.recurrence && task.recurrence !== 'none') {
         toast.success(`Task completed! Next ${task.recurrence} occurrence created.`)
@@ -57,13 +68,13 @@ export function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId, curre
 
   const handleSave = async () => {
     const { error } = await taskService.updateTask(task.id, {
-      title: editedTask.title,
+      title: editedTask.title.slice(0, 500),
       task_giver: editedTask.task_giver,
       start_date: editedTask.start_date,
       deadline: editedTask.deadline,
       priority: editedTask.priority,
       remarks: editedTask.remarks,
-    })
+    }, currentUserEmail, currentUserName)
     if (!error) {
       toast.success('Task updated')
       setIsEditing(false)
@@ -85,6 +96,22 @@ export function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId, curre
   const isOwner = task.user_id === currentUserId
   const statusCfg = STATUS_CONFIG[task.status] ?? STATUS_CONFIG.pending
 
+  const panelBtn = (icon: React.ReactNode, panel: Panel, label: string) => (
+    <button
+      onClick={() => togglePanel(panel)}
+      style={{
+        display: 'flex', alignItems: 'center', gap: '4px',
+        background: activePanel === panel ? 'rgba(99,102,241,0.15)' : 'transparent',
+        color: activePanel === panel ? 'var(--primary)' : 'var(--text-muted)',
+        fontSize: '0.75rem', padding: '4px 8px', borderRadius: '8px', transition: 'all 0.2s',
+      }}
+    >
+      {icon}
+      <span>{label}</span>
+      {activePanel === panel ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
+    </button>
+  )
+
   return (
     <motion.div
       layout
@@ -95,19 +122,31 @@ export function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId, curre
         padding: '24px',
         display: 'flex',
         flexDirection: 'column',
-        gap: '16px',
-        opacity: task.status === 'completed' ? 0.65 : 1,
-        border: isOverdue
-          ? '1px solid rgba(244,63,94,0.4)'
-          : isDueSoon
-            ? '1px solid rgba(245,158,11,0.4)'
-            : task.status === 'blocked'
-              ? '1px solid rgba(244,63,94,0.25)'
-              : '1px solid var(--glass-border)',
+        gap: '14px',
+        opacity: task.status === 'completed' ? 0.7 : 1,
+        border: isSelected
+          ? '1px solid rgba(99,102,241,0.5)'
+          : isOverdue
+            ? '1px solid rgba(244,63,94,0.4)'
+            : isDueSoon
+              ? '1px solid rgba(245,158,11,0.4)'
+              : task.status === 'blocked'
+                ? '1px solid rgba(244,63,94,0.25)'
+                : '1px solid var(--glass-border)',
+        background: isSelected ? 'rgba(99,102,241,0.05)' : undefined,
       }}
     >
       {/* Main row */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        {/* Bulk checkbox */}
+        {bulkMode && (
+          <button
+            onClick={() => onToggleSelect?.(task.id)}
+            style={{ background: 'transparent', color: isSelected ? 'var(--primary)' : 'rgba(255,255,255,0.2)', flexShrink: 0, padding: '2px' }}
+          >
+            {isSelected ? <CheckSquare size={18} /> : <Square size={18} />}
+          </button>
+        )}
 
         {/* Status cycle button */}
         <button
@@ -120,11 +159,11 @@ export function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId, curre
             border: `1px solid ${statusCfg.color}50`,
             borderRadius: '20px', padding: '4px 10px',
             fontSize: '0.75rem', fontWeight: 600, whiteSpace: 'nowrap',
-            transition: 'all 0.2s'
+            transition: 'all 0.2s',
           }}
         >
           {statusCfg.icon}
-          <span style={{ display: 'inline' }}>{statusCfg.label}</span>
+          <span>{statusCfg.label}</span>
         </button>
 
         {/* Title */}
@@ -134,13 +173,14 @@ export function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId, curre
               style={{ width: '100%', fontSize: '1.1rem', fontWeight: 600, background: 'rgba(255,255,255,0.1)' }}
               value={editedTask.title}
               onChange={e => setEditedTask({ ...editedTask, title: e.target.value })}
+              maxLength={500}
             />
           ) : (
             <div>
               <h4 style={{
                 fontSize: '1.1rem', fontWeight: 600,
                 textDecoration: task.status === 'completed' ? 'line-through' : 'none',
-                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
+                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
               }}>
                 {task.title}
               </h4>
@@ -172,7 +212,7 @@ export function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId, curre
         </div>
 
         {/* Actions */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
           {isEditing ? (
             <>
               <button onClick={handleSave} style={{ background: 'transparent', color: '#10b981' }}><Check size={20} /></button>
@@ -218,6 +258,7 @@ export function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId, curre
               value={editedTask.remarks || ''}
               onChange={e => setEditedTask({ ...editedTask, remarks: e.target.value })}
               placeholder="Remarks..."
+              maxLength={1000}
             />
           </div>
         ) : (
@@ -251,29 +292,37 @@ export function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId, curre
         </div>
       )}
 
-      {/* Comments toggle */}
+      {/* Panel toggle bar */}
       {!isEditing && (
-        <button
-          onClick={() => setShowComments(v => !v)}
-          style={{
-            display: 'flex', alignItems: 'center', gap: '6px',
-            background: 'transparent', color: 'var(--text-muted)',
-            fontSize: '0.8rem', padding: '0', alignSelf: 'flex-start'
-          }}
-        >
-          <MessageCircle size={14} />
-          <span>Comments</span>
-          {showComments ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
-        </button>
+        <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', paddingTop: '4px', borderTop: '1px solid var(--glass-border)' }}>
+          {panelBtn(<MessageCircle size={12} />, 'comments', 'Comments')}
+          {panelBtn(<CheckSquare size={12} />, 'subtasks', 'Checklist')}
+          {panelBtn(<Paperclip size={12} />, 'attachments', 'Files')}
+          {panelBtn(<Link2 size={12} />, 'dependencies', 'Deps')}
+          {panelBtn(<History size={12} />, 'activity', 'Activity')}
+        </div>
       )}
 
-      {/* Comments panel */}
-      {showComments && !isEditing && (
+      {/* Active panel */}
+      {!isEditing && activePanel === 'comments' && (
         <TaskComments
           taskId={task.id}
           currentUserEmail={currentUserEmail}
           currentUserName={currentUserName}
+          taskTitle={task.title}
         />
+      )}
+      {!isEditing && activePanel === 'subtasks' && (
+        <SubTaskList taskId={task.id} currentUserEmail={currentUserEmail} />
+      )}
+      {!isEditing && activePanel === 'attachments' && (
+        <FileAttachments taskId={task.id} currentUserEmail={currentUserEmail} />
+      )}
+      {!isEditing && activePanel === 'dependencies' && (
+        <TaskDependencies taskId={task.id} teamName={task.team_name || 'General'} />
+      )}
+      {!isEditing && activePanel === 'activity' && (
+        <ActivityLogPanel taskId={task.id} />
       )}
     </motion.div>
   )

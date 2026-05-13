@@ -11,6 +11,7 @@ export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '');
 
 export type TaskStatus = 'pending' | 'in_progress' | 'blocked' | 'completed';
 export type TaskRecurrence = 'none' | 'daily' | 'weekly' | 'monthly';
+export type UserRole = 'admin' | 'manager' | 'member';
 
 export type Task = {
   id: string;
@@ -38,6 +39,56 @@ export type TaskComment = {
   user_email: string;
   user_name: string;
   content: string;
+  created_at: string;
+};
+
+export type SubTask = {
+  id: string;
+  task_id: string;
+  title: string;
+  completed: boolean;
+  created_by: string;
+  position: number;
+  created_at: string;
+};
+
+export type TaskAttachment = {
+  id: string;
+  task_id: string;
+  file_name: string;
+  file_path: string;
+  file_size: number | null;
+  mime_type: string | null;
+  uploaded_by: string;
+  created_at: string;
+};
+
+export type TaskDependency = {
+  id: string;
+  task_id: string;
+  depends_on_task_id: string;
+  created_at: string;
+  depends_on?: Task;
+};
+
+export type ActivityLog = {
+  id: string;
+  task_id: string | null;
+  user_email: string;
+  user_name: string;
+  action: string;
+  details: Record<string, any> | null;
+  created_at: string;
+};
+
+export type AppNotification = {
+  id: string;
+  user_email: string;
+  title: string;
+  message: string;
+  type: 'info' | 'task' | 'comment' | 'pipeline' | 'mention';
+  read: boolean;
+  related_task_id: string | null;
   created_at: string;
 };
 

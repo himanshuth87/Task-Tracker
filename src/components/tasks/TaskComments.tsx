@@ -1,13 +1,16 @@
 import { useState, useEffect } from 'react'
-import { Send, Trash2 } from 'lucide-react'
+import { Send, Trash2, AtSign } from 'lucide-react'
 import { toast } from 'sonner'
 import { type TaskComment } from '../../supabase'
 import { commentService } from '../../services/commentService'
+import { notificationService } from '../../services/notificationService'
+import { activityService } from '../../services/activityService'
 
 interface TaskCommentsProps {
   taskId: string
   currentUserEmail: string
   currentUserName: string
+  taskTitle?: string
 }
 
 function timeAgo(dateStr: string): string {
@@ -18,7 +21,26 @@ function timeAgo(dateStr: string): string {
   return `${Math.floor(diff / 86400)}d ago`
 }
 
-export function TaskComments({ taskId, currentUserEmail, currentUserName }: TaskCommentsProps) {
+function renderContent(content: string) {
+  const parts = content.split(/(@\S+@\S+\.\S+|@\w+)/g)
+  return parts.map((part, i) =>
+    part.startsWith('@') ? (
+      <strong key={i} style={{ color: '#6366f1', fontWeight: 600 }}>{part}</strong>
+    ) : (
+      <span key={i}>{part}</span>
+    )
+  )
+}
+
+function extractMentions(text: string): string[] {
+  const emailRe = /@(\S+@\S+\.\S+)/g
+  const matches = []
+  let m
+  while ((m = emailRe.exec(text)) !== null) matches.push(m[1])
+  return [...new Set(matches)]
+}
+
+export function TaskComments({ taskId, currentUserEmail, currentUserName, taskTitle }: TaskCommentsProps) {
   const [comments, setComments] = useState<TaskComment[]>([])
   const [draft, setDraft] = useState('')
   const [loading, setLoading] = useState(false)
@@ -34,15 +56,31 @@ export function TaskComments({ taskId, currentUserEmail, currentUserName }: Task
   useEffect(() => { load() }, [taskId])
 
   const submit = async () => {
-    const text = draft.trim()
+    const text = draft.trim().slice(0, 2000)
     if (!text) return
     setSubmitting(true)
+
     const { error } = await commentService.addComment(taskId, currentUserEmail, currentUserName, text)
     if (error) {
       toast.error('Failed to post comment')
     } else {
       setDraft('')
       await load()
+
+      activityService.log(taskId, currentUserEmail, currentUserName, 'commented').catch(console.error)
+
+      const mentions = extractMentions(text)
+      mentions
+        .filter(email => email !== currentUserEmail)
+        .forEach(email => {
+          notificationService.createNotification(
+            email,
+            `${currentUserName} mentioned you`,
+            `In task "${taskTitle || 'a task'}": ${text.slice(0, 120)}`,
+            'mention',
+            taskId
+          ).catch(console.error)
+        })
     }
     setSubmitting(false)
   }
@@ -60,7 +98,9 @@ export function TaskComments({ taskId, currentUserEmail, currentUserName }: Task
       ) : (
         <>
           {comments.length === 0 && (
-            <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.25)', marginBottom: '12px' }}>No comments yet. Be the first to add an update.</p>
+            <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.25)', marginBottom: '12px' }}>
+              No comments yet. Use @email to mention someone.
+            </p>
           )}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '14px' }}>
             {comments.map(c => (
@@ -85,7 +125,9 @@ export function TaskComments({ taskId, currentUserEmail, currentUserName }: Task
                       )}
                     </div>
                   </div>
-                  <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.5 }}>{c.content}</p>
+                  <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.5 }}>
+                    {renderContent(c.content)}
+                  </p>
                 </div>
               </div>
             ))}
@@ -94,30 +136,37 @@ export function TaskComments({ taskId, currentUserEmail, currentUserName }: Task
       )}
 
       <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
-        <textarea
-          value={draft}
-          onChange={e => setDraft(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit() } }}
-          placeholder="Add an update or note... (Enter to send)"
-          rows={2}
-          style={{
-            flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)',
-            borderRadius: '10px', padding: '8px 12px', color: 'white',
-            fontFamily: 'inherit', fontSize: '0.85rem', resize: 'none'
-          }}
-        />
+        <div style={{ flex: 1, position: 'relative' }}>
+          <textarea
+            value={draft}
+            onChange={e => setDraft(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit() } }}
+            placeholder="Add a comment... @email to mention (Enter to send)"
+            rows={2}
+            maxLength={2000}
+            style={{
+              width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)',
+              borderRadius: '10px', padding: '8px 36px 8px 12px', color: 'white',
+              fontFamily: 'inherit', fontSize: '0.85rem', resize: 'none',
+            }}
+          />
+          <AtSign size={14} color="rgba(255,255,255,0.2)" style={{ position: 'absolute', right: '10px', bottom: '12px', pointerEvents: 'none' }} />
+        </div>
         <button
           onClick={submit}
           disabled={submitting || !draft.trim()}
           style={{
             background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
             color: 'white', borderRadius: '10px', padding: '10px 14px',
-            opacity: !draft.trim() ? 0.4 : 1, transition: 'opacity 0.2s'
+            opacity: !draft.trim() ? 0.4 : 1, transition: 'opacity 0.2s',
           }}
         >
           <Send size={15} />
         </button>
       </div>
+      {draft.length > 1800 && (
+        <p style={{ fontSize: '0.7rem', color: '#f59e0b', marginTop: '4px' }}>{2000 - draft.length} characters remaining</p>
+      )}
     </div>
   )
 }
