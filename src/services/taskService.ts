@@ -1,9 +1,29 @@
-import { supabase, type Task } from '../supabase'
+import { supabase, type Task, type TaskStatus } from '../supabase'
+
+const STATUS_CYCLE: Record<TaskStatus, TaskStatus> = {
+  pending: 'in_progress',
+  in_progress: 'blocked',
+  blocked: 'completed',
+  completed: 'pending',
+}
+
+const RECURRENCE_DAYS: Record<string, number> = {
+  daily: 1,
+  weekly: 7,
+  monthly: 30,
+}
+
+function shiftDate(dateStr: string | null, days: number): string | null {
+  if (!dateStr) return null
+  const d = new Date(dateStr)
+  d.setDate(d.getDate() + days)
+  return d.toISOString().split('T')[0]
+}
 
 export const taskService = {
   async fetchTasks(session: any, viewMode: 'personal' | 'team', filter: string) {
     if (!session) return { data: [], error: null }
-    
+
     let query = supabase
       .from('tasks')
       .select('*')
@@ -16,7 +36,6 @@ export const taskService = {
         query = query.eq('user_id', session.user.id)
       }
     } else if (viewMode === 'team') {
-      // Filter by the user's team name
       const teamName = session.user.user_metadata.team_name || 'General'
       query = query.eq('team_name', teamName)
     }
@@ -27,7 +46,6 @@ export const taskService = {
   async addTask(taskData: any) {
     const result = await supabase.from('tasks').insert([taskData]).select().single()
 
-    // Send email notification to assignee (only if assigned to someone else)
     if (!result.error && taskData.assigned_to_email && taskData.assigned_to_email !== taskData.user_email) {
       supabase.functions.invoke('notify-assignee', { body: result.data }).catch(console.error)
     }
@@ -35,11 +53,36 @@ export const taskService = {
     return result
   },
 
-  async updateTaskStatus(taskId: string, currentStatus: 'pending' | 'completed') {
-    return await supabase
+  async cycleStatus(task: Task) {
+    const nextStatus = STATUS_CYCLE[task.status] ?? 'pending'
+
+    const { error } = await supabase
       .from('tasks')
-      .update({ status: currentStatus === 'completed' ? 'pending' : 'completed' })
-      .eq('id', taskId)
+      .update({ status: nextStatus })
+      .eq('id', task.id)
+
+    // Auto-create next occurrence when a recurring task is completed
+    if (!error && nextStatus === 'completed' && task.recurrence && task.recurrence !== 'none') {
+      const days = RECURRENCE_DAYS[task.recurrence]
+      if (days) {
+        await supabase.from('tasks').insert([{
+          title: task.title,
+          task_giver: task.task_giver,
+          assigned_to_email: task.assigned_to_email,
+          start_date: shiftDate(task.start_date, days),
+          deadline: shiftDate(task.deadline, days),
+          remarks: task.remarks,
+          priority: task.priority,
+          status: 'pending',
+          user_id: task.user_id,
+          user_email: task.user_email,
+          team_name: task.team_name,
+          recurrence: task.recurrence,
+        }])
+      }
+    }
+
+    return { error, nextStatus }
   },
 
   async updateTask(taskId: string, updates: Partial<Task>) {
@@ -56,10 +99,10 @@ export const taskService = {
   subscribeToTasks(callback: (payload: any) => void) {
     return supabase
       .channel('tasks_changes')
-      .on('postgres_changes', { 
-        event: '*', 
-        schema: 'public', 
-        table: 'tasks' 
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'tasks'
       }, callback)
       .subscribe()
   }

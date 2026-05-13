@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X, CheckCircle, Clock, Circle, ChevronRight, AlertTriangle } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Product, StageName } from '../../supabase'
+import { supabase } from '../../supabase'
 import {
   productService,
   STAGE_META,
@@ -41,8 +42,23 @@ export function StageDetailModal({ product, currentUserEmail, currentUserName, o
       toast.error('Failed to complete stage: ' + error.message)
     } else {
       const nextIndex = STAGE_ORDER_LIST.indexOf(activeStage.stage_name as StageName) + 1
-      const nextStage = nextIndex < STAGE_ORDER_LIST.length ? STAGE_META[STAGE_ORDER_LIST[nextIndex]].label : null
-      toast.success(nextStage ? `Handed off to ${nextStage} team!` : 'Product completed!')
+      const nextStageName = nextIndex < STAGE_ORDER_LIST.length ? STAGE_ORDER_LIST[nextIndex] : null
+      const nextStageLabel = nextStageName ? STAGE_META[nextStageName].label : null
+      toast.success(nextStageLabel ? `Handed off to ${nextStageLabel} team!` : 'Product completed!')
+
+      // Send pipeline handoff email to product creator
+      if (product.created_by_email) {
+        supabase.functions.invoke('notify-stage-handoff', {
+          body: {
+            productName: product.name,
+            completedStage: activeStage.stage_name,
+            nextStage: nextStageName || 'completed',
+            completedBy: currentUserName || currentUserEmail,
+            recipientEmail: product.created_by_email,
+          }
+        }).catch(console.error)
+      }
+
       setHandoffNotes('')
       onUpdate()
       onClose()

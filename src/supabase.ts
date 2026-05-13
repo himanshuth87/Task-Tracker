@@ -9,11 +9,14 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '');
 
+export type TaskStatus = 'pending' | 'in_progress' | 'blocked' | 'completed';
+export type TaskRecurrence = 'none' | 'daily' | 'weekly' | 'monthly';
+
 export type Task = {
   id: string;
   title: string;
   description: string | null;
-  status: 'pending' | 'completed';
+  status: TaskStatus;
   priority: 'low' | 'medium' | 'high';
   category: string;
   created_at: string;
@@ -26,6 +29,16 @@ export type Task = {
   remarks: string | null;
   outlook_link: string | null;
   team_name?: string;
+  recurrence: TaskRecurrence;
+};
+
+export type TaskComment = {
+  id: string;
+  task_id: string;
+  user_email: string;
+  user_name: string;
+  content: string;
+  created_at: string;
 };
 
 export type StageName = 'ecommerce' | 'design' | 'sampling' | 'costing' | 'planning' | 'production';
