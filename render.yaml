@@ -8,6 +8,8 @@ services:
         sync: false
       - key: VITE_SUPABASE_ANON_KEY
         sync: false
+      - key: NODE_VERSION
+        value: 20.18.0
     routes:
       - type: rewrite
         source: /*
