@@ -38,6 +38,9 @@ function App() {
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [isLive, setIsLive] = useState(false)
+  const [isLightMode, setIsLightMode] = useState(() => {
+    return localStorage.getItem('tasktracker_theme') === 'light'
+  })
 
   // Pagination
   const [page, setPage] = useState(0)
@@ -50,6 +53,16 @@ function App() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => setSession(session))
     return () => subscription.unsubscribe()
   }, [])
+
+  useEffect(() => {
+    if (isLightMode) {
+      document.documentElement.setAttribute('data-theme', 'light')
+      localStorage.setItem('tasktracker_theme', 'light')
+    } else {
+      document.documentElement.removeAttribute('data-theme')
+      localStorage.setItem('tasktracker_theme', 'dark')
+    }
+  }, [isLightMode])
 
   const fetchTasks = useCallback(async (resetPage = false) => {
     if (!session) return
@@ -228,6 +241,15 @@ function App() {
           <button onClick={() => downloadExcel(allTasks)} className="glass-card action-btn" title="Export to Excel">
             <Download size={20} />
             <span>Export</span>
+          </button>
+
+          <button 
+            onClick={() => setIsLightMode(!isLightMode)} 
+            className="glass-card action-btn" 
+            title="Toggle Theme"
+            style={{ padding: '12px', fontSize: '1.2rem' }}
+          >
+            {isLightMode ? '🌙' : '☀️'}
           </button>
 
           {appSection === 'tasks' && (
