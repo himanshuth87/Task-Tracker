@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CheckCircle2, Circle, Calendar, Mail, Edit2, Trash2, Check, X, User, Clock, ExternalLink } from 'lucide-react'
+import { CheckCircle2, Circle, Calendar, Mail, Edit2, Trash2, Check, X, User, Clock } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { type Task } from '../../supabase'
@@ -37,12 +37,6 @@ export function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId }: Tas
   }
 
   const handleSave = async () => {
-    let finalOutlookLink = editedTask.outlook_link
-    // Auto-fix modern Outlook links to Classic OWA if detected
-    if (finalOutlookLink?.includes('outlook.office.com')) {
-      finalOutlookLink = finalOutlookLink.replace('outlook.office.com', 'outlook.office365.com/owa')
-    }
-
     const { error } = await taskService.updateTask(task.id, {
       title: editedTask.title,
       task_giver: editedTask.task_giver,
@@ -50,7 +44,6 @@ export function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId }: Tas
       deadline: editedTask.deadline,
       priority: editedTask.priority,
       remarks: editedTask.remarks,
-      outlook_link: finalOutlookLink
     })
     
     if (!error) {
@@ -143,15 +136,6 @@ export function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId }: Tas
             </>
           ) : (
             <>
-              {task.outlook_link && (
-                <button 
-                  onClick={() => window.open(task.outlook_link!, '_blank')} 
-                  title="View in Outlook" 
-                  style={{ background: 'transparent', color: '#0078d4', opacity: 0.9 }}
-                >
-                  <ExternalLink size={20} />
-                </button>
-              )}
               <button onClick={onAddToCalendar} title="Add to Calendar" style={{ background: 'transparent', color: 'var(--primary)', opacity: 0.8 }}>
                 <Calendar size={20} />
               </button>
@@ -188,12 +172,6 @@ export function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId }: Tas
             </select>
             <input type="date" value={editedTask.start_date || ''} onChange={e => setEditedTask({ ...editedTask, start_date: e.target.value })} />
             <input type="date" value={editedTask.deadline || ''} onChange={e => setEditedTask({ ...editedTask, deadline: e.target.value })} />
-            <input 
-              style={{ gridColumn: 'span 2' }}
-              placeholder="Paste Outlook Link" 
-              value={editedTask.outlook_link || ''} 
-              onChange={e => setEditedTask({ ...editedTask, outlook_link: e.target.value })} 
-            />
             <textarea 
               style={{ gridColumn: 'span 2', height: '60px' }}
               value={editedTask.remarks || ''}
