@@ -135,3 +135,93 @@
   transform: translateY(-2px);
   background: var(--glass-bg);
 }
+
+/* Notification dropdown */
+.notification-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  left: auto;
+  z-index: 200;
+  min-width: 340px;
+  border-radius: 20px;
+}
+
+/* Notification dot badge */
+.notification-dot {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: var(--accent);
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 800;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  border: 2px solid var(--bg-dark);
+}
+
+/* ── Light theme ─────────────────────────────── */
+[data-theme="light"] {
+  color-scheme: light;
+  color: #1e1e2e;
+  background-color: #f0f0f7;
+
+  --primary: #4f46e5;
+  --primary-glow: rgba(79, 70, 229, 0.25);
+  --secondary: #7c3aed;
+  --accent: #e11d48;
+  --bg-dark: #f8fafc;
+  --card-bg: rgba(255, 255, 255, 0.85);
+  --border-color: rgba(0, 0, 0, 0.1);
+  --text-muted: #64748b;
+  --text-main: #1e1e2e;
+  --glass-bg: rgba(255, 255, 255, 0.65);
+  --glass-border: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] body {
+  background: radial-gradient(circle at 50% 0%, #ddd6fe 0%, #f0f0f7 100%);
+}
+
+[data-theme="light"] input,
+[data-theme="light"] select,
+[data-theme="light"] textarea {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.12);
+  color: #1e1e2e;
+}
+
+[data-theme="light"] input::placeholder,
+[data-theme="light"] textarea::placeholder {
+  color: #94a3b8;
+}
+
+[data-theme="light"] .gradient-text {
+  background: linear-gradient(135deg, #1e1e2e 0%, #4f46e5 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+[data-theme="light"] .glass-card {
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.07);
+  border-color: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .task-card:hover {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.22);
+}

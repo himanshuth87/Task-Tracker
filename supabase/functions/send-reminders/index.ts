@@ -30,7 +30,7 @@ Deno.serve(async (_req) => {
         'Authorization': `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: 'TaskTracker <onboarding@resend.dev>',
+        from: 'TaskTracker <noreply@hscvpl.in>',
         to: [userEmail],
         subject: `Reminder: Task "${task.title}" is due in 2 days!`,
         html: `<strong>Hi!</strong><p>Your task <b>${task.title}</b> is due on ${task.deadline}.</p><p>Remarks: ${task.remarks || 'None'}</p>`,

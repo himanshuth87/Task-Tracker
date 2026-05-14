@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Plus, BarChart3, LogOut, Bell, Download, Users, Briefcase, Zap, UserCheck, Factory, Search, TrendingUp, AlertCircle, Clock, LayoutGrid, List, BarChart2, ChevronDown, ChevronUp } from 'lucide-react'
+import { Plus, BarChart3, LogOut, Bell, Download, Users, Briefcase, Zap, UserCheck, Factory, Search, TrendingUp, AlertCircle, Clock, LayoutGrid, List, BarChart2, ChevronDown, ChevronUp, Sun, Moon } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import './App.css'
 import { supabase } from './supabase'
@@ -243,13 +243,14 @@ function App() {
             <span>Export</span>
           </button>
 
-          <button 
-            onClick={() => setIsLightMode(!isLightMode)} 
-            className="glass-card action-btn" 
-            title="Toggle Theme"
-            style={{ padding: '12px', fontSize: '1.2rem' }}
+          <button
+            onClick={() => setIsLightMode(!isLightMode)}
+            className="glass-card action-btn"
+            title={isLightMode ? 'Switch to Dark' : 'Switch to Light'}
+            style={{ padding: '10px 14px', gap: '6px' }}
           >
-            {isLightMode ? '🌙' : '☀️'}
+            {isLightMode ? <Moon size={18} /> : <Sun size={18} />}
+            <span style={{ fontSize: '0.85rem' }}>{isLightMode ? 'Dark' : 'Light'}</span>
           </button>
 
           {appSection === 'tasks' && (
