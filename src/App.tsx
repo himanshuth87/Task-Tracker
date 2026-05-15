@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Plus, BarChart3, LogOut, Bell, Download, Users, Briefcase, Zap, UserCheck, Factory, Search, TrendingUp, AlertCircle, Clock, LayoutGrid, List, BarChart2, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Sun, Moon, Menu, X as XIcon } from 'lucide-react'
+import { Plus, BarChart3, LogOut, Bell, Download, Users, Briefcase, Zap, UserCheck, Factory, Search, TrendingUp, AlertCircle, Clock, LayoutGrid, List, BarChart2, ChevronLeft, ChevronRight, Sun, Moon, Menu, X as XIcon } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import './App.css'
 import { supabase } from './supabase'
@@ -24,7 +24,7 @@ import { downloadExcel, addToOutlook } from './utils/exportUtils'
 import { type Task } from './supabase'
 
 type FilterValue = 'all' | 'pending' | 'in_progress' | 'blocked' | 'completed' | 'assigned_to_me'
-type ViewLayout = 'list' | 'kanban'
+type ViewLayout = 'list' | 'kanban' | 'charts'
 type AppSection = 'dashboard' | 'tasks' | 'pipeline'
 
 function App() {
@@ -39,7 +39,6 @@ function App() {
   const [searchTerm, setSearchTerm] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [viewLayout, setViewLayout] = useState<ViewLayout>('list')
-  const [showCharts, setShowCharts] = useState(false)
   const [bulkMode, setBulkMode] = useState(false)
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
@@ -368,28 +367,7 @@ function App() {
                   </div>
                 </div>
 
-                {/* Charts toggle */}
-                <button
-                  onClick={() => setShowCharts(v => !v)}
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: showCharts ? 'rgba(99,102,241,0.12)' : 'rgba(255,255,255,0.04)', color: showCharts ? 'var(--primary)' : 'var(--text-muted)', borderRadius: '10px', padding: '8px 12px', fontSize: '0.82rem', fontWeight: 600, marginTop: '8px', border: showCharts ? '1px solid rgba(99,102,241,0.25)' : '1px solid transparent', transition: 'all 0.2s' }}
-                >
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><BarChart2 size={14} /> Charts</span>
-                  {showCharts ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
-                </button>
               </div>
-
-              <AnimatePresence>
-                {showCharts && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    style={{ overflow: 'hidden', marginTop: '16px' }}
-                  >
-                    <AnalyticsCharts tasks={allTasks} />
-                  </motion.div>
-                )}
-              </AnimatePresence>
             </div>
           )}
 
@@ -483,18 +461,19 @@ function App() {
 
                 {/* View layout toggle */}
                 <div style={{ display: 'flex', background: 'rgba(255,255,255,0.04)', borderRadius: '12px', padding: '4px', border: '1px solid var(--glass-border)', gap: '4px' }}>
-                  <button
-                    onClick={() => setViewLayout('list')}
-                    style={{ padding: '6px 12px', borderRadius: '9px', background: viewLayout === 'list' ? 'rgba(99,102,241,0.2)' : 'transparent', color: viewLayout === 'list' ? 'var(--primary)' : 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.8rem', fontWeight: 600, transition: 'all 0.2s' }}
-                  >
-                    <List size={14} /> List
-                  </button>
-                  <button
-                    onClick={() => setViewLayout('kanban')}
-                    style={{ padding: '6px 12px', borderRadius: '9px', background: viewLayout === 'kanban' ? 'rgba(99,102,241,0.2)' : 'transparent', color: viewLayout === 'kanban' ? 'var(--primary)' : 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.8rem', fontWeight: 600, transition: 'all 0.2s' }}
-                  >
-                    <LayoutGrid size={14} /> Board
-                  </button>
+                  {([
+                    { key: 'list',   icon: <List size={14} />,     label: 'List'   },
+                    { key: 'kanban', icon: <LayoutGrid size={14} />, label: 'Board'  },
+                    { key: 'charts', icon: <BarChart2 size={14} />,  label: 'Charts' },
+                  ] as const).map(({ key, icon, label }) => (
+                    <button
+                      key={key}
+                      onClick={() => setViewLayout(key)}
+                      style={{ padding: '6px 12px', borderRadius: '9px', background: viewLayout === key ? 'rgba(99,102,241,0.2)' : 'transparent', color: viewLayout === key ? 'var(--primary)' : 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.8rem', fontWeight: 600, transition: 'all 0.2s' }}
+                    >
+                      {icon} {label}
+                    </button>
+                  ))}
                 </div>
 
                 {/* Bulk mode toggle */}
@@ -506,8 +485,8 @@ function App() {
                 </button>
               </div>
 
-              {/* Bulk select-all bar */}
-              {bulkMode && filteredTasks.length > 0 && (
+              {/* Bulk select-all bar — hidden in charts view */}
+              {bulkMode && filteredTasks.length > 0 && viewLayout !== 'charts' && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px', padding: '8px 12px', borderRadius: '10px', background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)' }}>
                   <button onClick={toggleSelectAll} style={{ background: 'transparent', color: 'var(--primary)', fontSize: '0.82rem', fontWeight: 600 }}>
                     {selectedIds.length === filteredTasks.length ? 'Deselect All' : `Select All (${filteredTasks.length})`}
@@ -534,6 +513,8 @@ function App() {
                     {searchTerm ? 'Try a different search term.' : 'Create a new task to get started!'}
                   </p>
                 </div>
+              ) : viewLayout === 'charts' ? (
+                <AnalyticsCharts tasks={allTasks} />
               ) : viewLayout === 'kanban' ? (
                 <div style={{ overflowX: 'auto' }}>
                   <KanbanBoard tasks={filteredTasks} onUpdate={() => fetchTasks(true)} />

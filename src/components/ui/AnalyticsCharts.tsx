@@ -15,8 +15,8 @@ const PRIORITY_COLORS = { low: '#10b981', medium: '#f59e0b', high: '#f43f5e' }
 function CustomTooltip({ active, payload, label }: any) {
   if (active && payload && payload.length) {
     return (
-      <div style={{ background: 'rgba(15,15,20,0.95)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '10px 14px' }}>
-        <p style={{ color: 'white', fontSize: '0.82rem', marginBottom: '4px' }}>{label}</p>
+      <div style={{ background: 'var(--card-bg)', border: '1px solid var(--glass-border)', borderRadius: '10px', padding: '10px 14px', boxShadow: '0 8px 24px rgba(0,0,0,0.3)' }}>
+        <p style={{ color: 'var(--text-main)', fontSize: '0.82rem', marginBottom: '4px' }}>{label}</p>
         {payload.map((p: any) => (
           <p key={p.dataKey} style={{ color: p.color, fontSize: '0.8rem' }}>{p.name}: {p.value}</p>
         ))}
@@ -71,34 +71,35 @@ export function AnalyticsCharts({ tasks }: AnalyticsChartsProps) {
   })
   const overdueData = Object.entries(assigneeMap).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([name, value]) => ({ name, value }))
 
-  const chartStyle = { padding: '20px', background: 'rgba(255,255,255,0.02)', borderRadius: '18px', border: '1px solid var(--glass-border)' }
+  const chartStyle = { padding: '24px', background: 'rgba(255,255,255,0.02)', borderRadius: '18px', border: '1px solid var(--glass-border)' }
   const titleStyle = { fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' as const, letterSpacing: '0.05em', marginBottom: '16px' }
+  const tickStyle = { fontSize: 12, fill: 'var(--text-muted)' } as const
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      {/* Status + Priority row */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+      {/* Status + Priority side by side */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px' }}>
         <div style={chartStyle}>
           <p style={titleStyle}>By Status</p>
-          <ResponsiveContainer width="100%" height={160}>
+          <ResponsiveContainer width="100%" height={220}>
             <PieChart>
-              <Pie data={statusData} cx="50%" cy="50%" innerRadius={40} outerRadius={65} paddingAngle={3} dataKey="value">
+              <Pie data={statusData} cx="50%" cy="45%" innerRadius={55} outerRadius={85} paddingAngle={3} dataKey="value">
                 {statusData.map((d, i) => <Cell key={i} fill={d.color} />)}
               </Pie>
               <Tooltip content={<CustomTooltip />} />
-              <Legend iconType="circle" iconSize={8} formatter={(v) => <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{v}</span>} />
+              <Legend iconType="circle" iconSize={8} formatter={(v) => <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{v}</span>} />
             </PieChart>
           </ResponsiveContainer>
         </div>
 
         <div style={chartStyle}>
           <p style={titleStyle}>By Priority</p>
-          <ResponsiveContainer width="100%" height={160}>
-            <BarChart data={priorityData} barSize={28}>
-              <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} allowDecimals={false} />
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={priorityData} barSize={40}>
+              <XAxis dataKey="name" tick={tickStyle} axisLine={false} tickLine={false} />
+              <YAxis tick={tickStyle} axisLine={false} tickLine={false} allowDecimals={false} />
               <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+              <Bar dataKey="value" radius={[8, 8, 0, 0]}>
                 {priorityData.map((d, i) => <Cell key={i} fill={d.color} />)}
               </Bar>
             </BarChart>
@@ -106,16 +107,16 @@ export function AnalyticsCharts({ tasks }: AnalyticsChartsProps) {
         </div>
       </div>
 
-      {/* Weekly trend */}
+      {/* Weekly trend — full width */}
       <div style={chartStyle}>
         <p style={titleStyle}>Weekly Trend</p>
-        <ResponsiveContainer width="100%" height={140}>
+        <ResponsiveContainer width="100%" height={200}>
           <LineChart data={weeklyData}>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-            <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} allowDecimals={false} />
+            <XAxis dataKey="name" tick={tickStyle} axisLine={false} tickLine={false} />
+            <YAxis tick={tickStyle} axisLine={false} tickLine={false} allowDecimals={false} />
             <Tooltip content={<CustomTooltip />} />
-            <Legend iconSize={8} formatter={(v) => <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{v}</span>} />
+            <Legend iconSize={8} formatter={(v) => <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{v}</span>} />
             <Line type="monotone" dataKey="Created" stroke="#6366f1" strokeWidth={2} dot={false} />
             <Line type="monotone" dataKey="Completed" stroke="#10b981" strokeWidth={2} dot={false} />
           </LineChart>
@@ -126,12 +127,12 @@ export function AnalyticsCharts({ tasks }: AnalyticsChartsProps) {
       {overdueData.length > 0 && (
         <div style={chartStyle}>
           <p style={titleStyle}>Overdue Tasks by Person</p>
-          <ResponsiveContainer width="100%" height={120}>
-            <BarChart data={overdueData} layout="vertical" barSize={14}>
-              <XAxis type="number" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} allowDecimals={false} />
-              <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} width={60} />
+          <ResponsiveContainer width="100%" height={Math.max(160, overdueData.length * 36)}>
+            <BarChart data={overdueData} layout="vertical" barSize={18}>
+              <XAxis type="number" tick={tickStyle} axisLine={false} tickLine={false} allowDecimals={false} />
+              <YAxis type="category" dataKey="name" tick={tickStyle} axisLine={false} tickLine={false} width={80} />
               <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="value" fill="#f43f5e" radius={[0, 6, 6, 0]} />
+              <Bar dataKey="value" fill="#f43f5e" radius={[0, 8, 8, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
