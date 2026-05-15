@@ -23,12 +23,12 @@
   /* Dark Theme Variables (Default) */
   --bg-dark: #000000;
   --body-bg: #000000;
-  --card-bg: rgba(14, 14, 14, 0.9);
-  --border-color: rgba(255, 255, 255, 0.1);
+  --card-bg: #111111;
+  --border-color: rgba(255, 255, 255, 0.12);
   --text-muted: #94a3b8;
-  --text-main: rgba(255, 255, 255, 0.87);
-  --glass-bg: rgba(255, 255, 255, 0.04);
-  --glass-border: rgba(255, 255, 255, 0.09);
+  --text-main: rgba(255, 255, 255, 0.92);
+  --glass-bg: #111111;
+  --glass-border: rgba(255, 255, 255, 0.1);
   --grad-start: #fff;
   --input-text: white;
   --scrollbar-thumb: rgba(255, 255, 255, 0.1);
@@ -78,7 +78,7 @@ body {
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--glass-border);
   border-radius: 24px;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6), 0 1px 0 rgba(255, 255, 255, 0.05) inset;
 }
 
 .gradient-text {

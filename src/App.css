@@ -209,9 +209,9 @@
 }
 
 [data-theme="light"] .glass-card {
-  background: rgba(255, 255, 255, 0.8);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.07);
-  border-color: rgba(0, 0, 0, 0.06);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08), 0 1px 0 rgba(255,255,255,0.9) inset;
+  border-color: rgba(0, 0, 0, 0.07);
 }
 
 [data-theme="light"] .task-card:hover {

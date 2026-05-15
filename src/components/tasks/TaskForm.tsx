@@ -194,7 +194,7 @@ export function TaskForm({ onTaskAdded, userId, userEmail, fullName, teamName }:
             onChange={e => setRemarks(e.target.value)}
             placeholder="Any extra context or instructions for your colleague..."
             maxLength={1000}
-            style={{ width: '100%', height: '80px', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '12px', padding: '12px', color: 'white', resize: 'vertical', fontFamily: 'inherit' }}
+            style={{ width: '100%', height: '80px', resize: 'vertical', fontFamily: 'inherit' }}
           />
         </div>
 
@@ -208,10 +208,10 @@ export function TaskForm({ onTaskAdded, userId, userEmail, fullName, teamName }:
           {checklistItems.length > 0 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '10px' }}>
               {checklistItems.map((item, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(255,255,255,0.04)', borderRadius: '10px', padding: '8px 12px', border: '1px solid var(--glass-border)' }}>
-                  <div style={{ width: '14px', height: '14px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.25)', flexShrink: 0 }} />
-                  <span style={{ flex: 1, fontSize: '0.85rem', color: 'rgba(255,255,255,0.8)' }}>{item}</span>
-                  <button type="button" onClick={() => removeChecklistItem(i)} style={{ background: 'transparent', color: 'rgba(255,255,255,0.2)', padding: '2px' }}>
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'var(--glass-bg)', borderRadius: '10px', padding: '8px 12px', border: '1px solid var(--glass-border)' }}>
+                  <div style={{ width: '14px', height: '14px', borderRadius: '4px', border: '1px solid var(--border-color)', flexShrink: 0 }} />
+                  <span style={{ flex: 1, fontSize: '0.85rem', color: 'var(--text-main)' }}>{item}</span>
+                  <button type="button" onClick={() => removeChecklistItem(i)} style={{ background: 'transparent', color: 'var(--text-muted)', padding: '2px' }}>
                     <X size={13} />
                   </button>
                 </div>
@@ -259,10 +259,10 @@ export function TaskForm({ onTaskAdded, userId, userEmail, fullName, teamName }:
           {draftFiles.length === 0 ? (
             <div
               onClick={() => fileRef.current?.click()}
-              style={{ padding: '14px', textAlign: 'center', borderRadius: '12px', border: '2px dashed rgba(255,255,255,0.08)', cursor: 'pointer' }}
+              style={{ padding: '14px', textAlign: 'center', borderRadius: '12px', border: '2px dashed var(--glass-border)', cursor: 'pointer' }}
             >
-              <Paperclip size={16} color="rgba(255,255,255,0.2)" style={{ margin: '0 auto 6px' }} />
-              <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.25)' }}>Click to attach files (PDFs, images, docs — max 20 MB each)</p>
+              <Paperclip size={16} color="var(--text-muted)" style={{ margin: '0 auto 6px' }} />
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Click to attach files (PDFs, images, docs — max 20 MB each)</p>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
