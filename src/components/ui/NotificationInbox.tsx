@@ -105,13 +105,13 @@ export function NotificationInbox({ userEmail, onUnreadChange }: NotificationInb
             >
               <div style={{ marginTop: '2px', flexShrink: 0 }}>{TYPE_ICON[n.type] || TYPE_ICON.info}</div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontSize: '0.82rem', fontWeight: n.read ? 400 : 600, color: 'white', marginBottom: '2px' }}>{n.title}</p>
+                <p style={{ fontSize: '0.82rem', fontWeight: n.read ? 400 : 600, color: 'var(--text-main)', marginBottom: '2px' }}>{n.title}</p>
                 <p style={{ fontSize: '0.77rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>{n.message}</p>
-                <p style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.2)', marginTop: '4px' }}>{timeAgo(n.created_at)}</p>
+                <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', opacity: 0.5, marginTop: '4px' }}>{timeAgo(n.created_at)}</p>
               </div>
               <button
                 onClick={e => { e.stopPropagation(); remove(n.id) }}
-                style={{ background: 'transparent', color: 'rgba(255,255,255,0.15)', padding: '2px', flexShrink: 0, marginTop: '2px' }}
+                style={{ background: 'transparent', color: 'var(--text-muted)', padding: '2px', flexShrink: 0, marginTop: '2px' }}
               >
                 <Trash2 size={12} />
               </button>

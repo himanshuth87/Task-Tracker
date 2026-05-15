@@ -113,19 +113,19 @@ export function TaskComments({ taskId, currentUserEmail, currentUserName, taskTi
                 }}>
                   {c.user_name?.[0]?.toUpperCase() || '?'}
                 </div>
-                <div style={{ flex: 1, background: 'rgba(255,255,255,0.04)', borderRadius: '10px', padding: '8px 12px' }}>
+                <div style={{ flex: 1, background: 'var(--glass-bg)', borderRadius: '10px', padding: '8px 12px', border: '1px solid var(--glass-border)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                    <span style={{ fontSize: '0.78rem', fontWeight: 600, color: 'white' }}>{c.user_name}</span>
+                    <span style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-main)' }}>{c.user_name}</span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{timeAgo(c.created_at)}</span>
                       {c.user_email === currentUserEmail && (
-                        <button onClick={() => remove(c.id)} style={{ background: 'transparent', color: 'rgba(255,255,255,0.2)', padding: '0' }}>
+                        <button onClick={() => remove(c.id)} style={{ background: 'transparent', color: 'var(--text-muted)', padding: '0' }}>
                           <Trash2 size={12} />
                         </button>
                       )}
                     </div>
                   </div>
-                  <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.5 }}>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-main)', lineHeight: 1.5, opacity: 0.85 }}>
                     {renderContent(c.content)}
                   </p>
                 </div>
@@ -145,8 +145,7 @@ export function TaskComments({ taskId, currentUserEmail, currentUserName, taskTi
             rows={2}
             maxLength={2000}
             style={{
-              width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)',
-              borderRadius: '10px', padding: '8px 36px 8px 12px', color: 'white',
+              width: '100%', borderRadius: '10px', padding: '8px 36px 8px 12px',
               fontFamily: 'inherit', fontSize: '0.85rem', resize: 'none',
             }}
           />

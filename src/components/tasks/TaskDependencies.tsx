@@ -116,16 +116,16 @@ export function TaskDependencies({ taskId, teamName }: TaskDependenciesProps) {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search tasks to link..."
-              style={{ flex: 1, background: 'transparent', border: 'none', fontSize: '0.85rem', padding: 0, outline: 'none', color: 'white' }}
+              style={{ flex: 1, background: 'transparent', border: 'none', fontSize: '0.85rem', padding: 0, outline: 'none', color: 'var(--text-main)' }}
             />
           </div>
           {results.length > 0 && (
-            <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '4px', background: '#1a1a2e', border: '1px solid var(--glass-border)', borderRadius: '12px', overflow: 'hidden', zIndex: 50 }}>
+            <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '4px', background: 'var(--card-bg)', border: '1px solid var(--glass-border)', borderRadius: '12px', overflow: 'hidden', zIndex: 50 }}>
               {results.map(t => (
                 <button
                   key={t.id}
                   onClick={() => addDep(t)}
-                  style={{ width: '100%', padding: '10px 14px', background: 'transparent', color: 'rgba(255,255,255,0.85)', fontSize: '0.85rem', textAlign: 'left', borderBottom: '1px solid var(--glass-border)' }}
+                  style={{ width: '100%', padding: '10px 14px', background: 'transparent', color: 'var(--text-main)', fontSize: '0.85rem', textAlign: 'left', borderBottom: '1px solid var(--glass-border)' }}
                   onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}
                   onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                 >

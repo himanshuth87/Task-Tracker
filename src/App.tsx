@@ -217,7 +217,7 @@ function App() {
               className={`glass-card action-btn ${unreadCount > 0 ? 'pulse' : ''}`}
               title="Notifications"
             >
-              <Bell size={20} color={unreadCount > 0 ? 'var(--primary)' : 'white'} />
+              <Bell size={20} color={unreadCount > 0 ? 'var(--primary)' : 'var(--text-muted)'} />
               {unreadCount > 0 && <span className="notification-dot">{unreadCount}</span>}
             </button>
             <AnimatePresence>

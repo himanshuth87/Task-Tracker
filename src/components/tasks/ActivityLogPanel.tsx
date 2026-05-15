@@ -51,7 +51,7 @@ export function ActivityLogPanel({ taskId }: ActivityLogPanelProps) {
       {loading ? (
         <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Loading...</p>
       ) : logs.length === 0 ? (
-        <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.2)' }}>No activity yet.</p>
+        <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>No activity yet.</p>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '200px', overflowY: 'auto' }}>
           {logs.map(log => {
@@ -60,8 +60,8 @@ export function ActivityLogPanel({ taskId }: ActivityLogPanelProps) {
               <div key={log.id} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
                 <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: color, marginTop: '6px', flexShrink: 0 }} />
                 <div style={{ flex: 1 }}>
-                  <span style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.75)' }}>
-                    <strong style={{ color: 'white' }}>{log.user_name}</strong>{' '}
+                  <span style={{ fontSize: '0.82rem', color: 'var(--text-main)', opacity: 0.85 }}>
+                    <strong style={{ color: 'var(--text-main)' }}>{log.user_name}</strong>{' '}
                     <span style={{ color }}>{log.action.replace(/_/g, ' ')}</span>
                     {log.details?.note && <span style={{ color: 'var(--text-muted)' }}> — {log.details.note}</span>}
                   </span>
