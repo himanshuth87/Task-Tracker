@@ -67,10 +67,6 @@ function App() {
     }
   }, [isLightMode])
 
-  useEffect(() => {
-    document.body.classList.toggle('modal-open', showForm)
-    return () => { document.body.classList.remove('modal-open') }
-  }, [showForm])
 
   const fetchTasks = useCallback(async (resetPage = false) => {
     if (!session) return
