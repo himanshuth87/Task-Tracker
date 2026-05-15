@@ -298,13 +298,6 @@
 
 /* ── Sidebar collapsed state (desktop only) ─────────────────────── */
 @media (min-width: 992px) {
-  /* Hide content that shouldn't show in icon-only mode */
-  .task-grid.sidebar-collapsed .sidebar-analytics,
-  .task-grid.sidebar-collapsed .sidebar-view,
-  .task-grid.sidebar-collapsed .sidebar-status {
-    display: none;
-  }
-
   .task-grid.sidebar-collapsed .sidebar .glass-card {
     padding: 8px !important;
   }
