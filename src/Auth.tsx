@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { supabase } from './supabase'
 import { motion } from 'framer-motion'
-import { LogIn, UserPlus, Mail, Lock, Loader2, User, Users, KeyRound, ArrowLeft } from 'lucide-react'
+import { LogIn, UserPlus, Mail, Lock, Loader2, User, Users, KeyRound, ArrowLeft, Eye, EyeOff } from 'lucide-react'
 
 type AuthView = 'signin' | 'signup' | 'reset'
 
@@ -14,6 +14,7 @@ export function Auth() {
   const [teamName, setTeamName] = useState('')
   const [view, setView] = useState<AuthView>('signin')
   const [resetSent, setResetSent] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -170,7 +171,31 @@ export function Auth() {
             {view !== 'reset' && (
               <div>
                 {inputLabel('Password', <Lock size={16} />)}
-                <input required type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" minLength={6} style={{ width: '100%' }} />
+                <div style={{ position: 'relative' }}>
+                  <input
+                    required
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    minLength={6}
+                    style={{ width: '100%', paddingRight: '44px' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(v => !v)}
+                    style={{
+                      position: 'absolute', right: '12px', top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'transparent', color: 'var(--text-muted)',
+                      padding: '4px', display: 'flex', alignItems: 'center',
+                    }}
+                    title={showPassword ? 'Hide password' : 'Show password'}
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
               </div>
             )}
 
