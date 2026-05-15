@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Calendar, Mail, Edit2, Trash2, Check, X, User, Clock, MessageCircle, ChevronDown, ChevronUp, AlertCircle, Loader2, CheckSquare, Paperclip, Link2, History, Square } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
-import { type Task, type TaskStatus } from '../../supabase'
+import { type Task, type TaskStatus, supabase } from '../../supabase'
 import { taskService } from '../../services/taskService'
 import { TaskComments } from './TaskComments'
 import { SubTaskList } from './SubTaskList'
@@ -10,6 +10,8 @@ import { FileAttachments } from './FileAttachments'
 import { TaskDependencies } from './TaskDependencies'
 import { ActivityLogPanel } from './ActivityLogPanel'
 import { formatDate, getDaysRemaining } from '../../utils/dateUtils'
+import { Avatar } from '../ui/Avatar'
+import { ConfirmModal } from '../ui/ConfirmModal'
 
 interface TaskItemProps {
   task: Task
@@ -40,6 +42,18 @@ export function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId, curre
   const [isEditing, setIsEditing] = useState(false)
   const [editedTask, setEditedTask] = useState({ ...task })
   const [activePanel, setActivePanel] = useState<Panel>(null)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [subtasksInfo, setSubtasksInfo] = useState({ total: 0, completed: 0 })
+
+  useEffect(() => {
+    const fetchSubtasks = async () => {
+      const { data } = await supabase.from('subtasks').select('completed').eq('task_id', task.id)
+      if (data) {
+        setSubtasksInfo({ total: data.length, completed: data.filter((s: any) => s.completed).length })
+      }
+    }
+    fetchSubtasks()
+  }, [task.id])
 
   const togglePanel = (panel: Panel) => setActivePanel(p => p === panel ? null : panel)
 
@@ -55,8 +69,12 @@ export function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId, curre
     }
   }
 
-  const deleteTask = async () => {
-    if (!confirm('Are you sure?')) return
+  const handleDeleteClick = () => {
+    setShowDeleteConfirm(true)
+  }
+
+  const performDelete = async () => {
+    setShowDeleteConfirm(false)
     const { error } = await taskService.deleteTask(task.id)
     if (!error) {
       toast.success('Task deleted')
@@ -177,11 +195,16 @@ export function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId, curre
             />
           ) : (
             <div>
-              <h4 style={{
-                fontSize: '1.1rem', fontWeight: 600,
-                textDecoration: task.status === 'completed' ? 'line-through' : 'none',
-                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-              }}>
+              <h4 
+                onDoubleClick={() => isOwner && setIsEditing(true)}
+                style={{
+                  fontSize: '1.1rem', fontWeight: 600,
+                  textDecoration: task.status === 'completed' ? 'line-through' : 'none',
+                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  cursor: isOwner ? 'pointer' : 'default',
+                }}
+                title={isOwner ? "Double click to edit" : ""}
+              >
                 {task.title}
               </h4>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px', flexWrap: 'wrap' }}>
@@ -192,14 +215,20 @@ export function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId, curre
                   </span>
                 )}
                 {task.user_email && (
-                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: '10px' }}>
-                    @{task.user_email.split('@')[0]}
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(255,255,255,0.05)', padding: '2px 8px 2px 4px', borderRadius: '20px' }}>
+                    <Avatar email={task.user_email} size={16} />
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                      {task.user_email.split('@')[0]}
+                    </span>
+                  </div>
                 )}
                 {task.assigned_to_email && (
-                  <span style={{ fontSize: '0.72rem', color: '#10b981', background: 'rgba(16,185,129,0.1)', padding: '2px 8px', borderRadius: '10px', fontWeight: 600 }}>
-                    → @{task.assigned_to_email.split('@')[0]}
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(16,185,129,0.1)', padding: '2px 8px 2px 4px', borderRadius: '20px' }}>
+                    <Avatar email={task.assigned_to_email} size={16} />
+                    <span style={{ fontSize: '0.72rem', color: '#10b981', fontWeight: 600 }}>
+                      {task.assigned_to_email.split('@')[0]}
+                    </span>
+                  </div>
                 )}
                 {task.team_name && (
                   <span style={{ fontSize: '0.72rem', color: 'var(--primary)', background: 'rgba(99,102,241,0.1)', padding: '2px 8px', borderRadius: '10px' }}>
@@ -231,7 +260,7 @@ export function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId, curre
                   <button onClick={() => setIsEditing(true)} style={{ background: 'transparent', color: 'rgba(255,255,255,0.4)' }}>
                     <Edit2 size={16} />
                   </button>
-                  <button onClick={deleteTask} style={{ background: 'transparent', color: 'rgba(255,255,255,0.15)' }}>
+                  <button onClick={handleDeleteClick} style={{ background: 'transparent', color: 'rgba(255,255,255,0.15)' }}>
                     <Trash2 size={16} />
                   </button>
                 </>
@@ -281,6 +310,12 @@ export function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId, curre
                 {isOverdue && <span className="reminder-tag" style={{ background: 'rgba(244,63,94,0.15)', color: '#f43f5e' }}>OVERDUE</span>}
               </div>
             )}
+            {subtasksInfo.total > 0 && (
+              <div className="meta-info" style={{ color: subtasksInfo.completed === subtasksInfo.total ? '#10b981' : 'var(--text-muted)' }}>
+                <CheckSquare size={13} />
+                <span>{subtasksInfo.completed} / {subtasksInfo.total} Subtasks</span>
+              </div>
+            )}
           </>
         )}
       </div>
@@ -323,6 +358,15 @@ export function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId, curre
       )}
       {!isEditing && activePanel === 'activity' && (
         <ActivityLogPanel taskId={task.id} />
+      )}
+      {showDeleteConfirm && (
+        <ConfirmModal
+          title="Delete Task"
+          message={`Are you sure you want to delete "${task.title}"?`}
+          confirmText="Delete"
+          onConfirm={performDelete}
+          onCancel={() => setShowDeleteConfirm(false)}
+        />
       )}
     </motion.div>
   )

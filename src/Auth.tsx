@@ -34,6 +34,36 @@ export function Auth() {
     }
 
     if (view === 'signup') {
+      // 1. Check if the team already exists
+      const { count, error: teamCheckErr } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .eq('team_name', teamName || 'General')
+
+      let isNewTeam = false
+      if (teamCheckErr) {
+        console.error('Error checking team:', teamCheckErr)
+      } else if (count === 0) {
+        isNewTeam = true
+      }
+
+      // 2. If team exists, verify invitation
+      if (!isNewTeam) {
+        const { data: invite, error: inviteErr } = await supabase
+          .from('team_invitations')
+          .select('*')
+          .eq('team_name', teamName || 'General')
+          .eq('invited_email', email)
+          .eq('status', 'pending')
+          .single()
+
+        if (!invite || inviteErr) {
+          toast.error(`Team "${teamName || 'General'}" already exists. You need an invitation to join.`)
+          setLoading(false)
+          return
+        }
+      }
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -41,17 +71,29 @@ export function Auth() {
           data: { full_name: fullName, team_name: teamName || 'General' }
         }
       })
+      
       if (error) {
         toast.error(error.message)
       } else if (data.user) {
+        // Insert profile
         await supabase.from('profiles').insert([{
           id: data.user.id,
           full_name: fullName,
           email,
           team_name: teamName || 'General',
-          role: 'member',
+          role: isNewTeam ? 'admin' : 'member',
         }])
-        toast.success('Account created! Please sign in.')
+
+        // If joined via invite, update invitation status
+        if (!isNewTeam) {
+          await supabase
+            .from('team_invitations')
+            .update({ status: 'accepted' })
+            .eq('team_name', teamName || 'General')
+            .eq('invited_email', email)
+        }
+
+        toast.success(isNewTeam ? 'Account created! You are the team admin.' : 'Account created! Please sign in.')
         setView('signin')
       }
     } else {

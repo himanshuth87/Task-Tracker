@@ -5,6 +5,7 @@ import { type TaskComment } from '../../supabase'
 import { commentService } from '../../services/commentService'
 import { notificationService } from '../../services/notificationService'
 import { activityService } from '../../services/activityService'
+import { Avatar } from '../ui/Avatar'
 
 interface TaskCommentsProps {
   taskId: string
@@ -105,14 +106,7 @@ export function TaskComments({ taskId, currentUserEmail, currentUserName, taskTi
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '14px' }}>
             {comments.map(c => (
               <div key={c.id} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
-                <div style={{
-                  width: '28px', height: '28px', borderRadius: '50%', flexShrink: 0,
-                  background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: '0.7rem', fontWeight: 700, color: 'white'
-                }}>
-                  {c.user_name?.[0]?.toUpperCase() || '?'}
-                </div>
+                <Avatar name={c.user_name} size={28} className="flex-shrink-0" />
                 <div style={{ flex: 1, background: 'var(--glass-bg)', borderRadius: '10px', padding: '8px 12px', border: '1px solid var(--glass-border)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                     <span style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-main)' }}>{c.user_name}</span>

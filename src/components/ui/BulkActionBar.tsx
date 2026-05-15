@@ -4,6 +4,7 @@ import { type TaskStatus } from '../../supabase'
 import { taskService } from '../../services/taskService'
 import { toast } from 'sonner'
 import { useState } from 'react'
+import { ConfirmModal } from './ConfirmModal'
 
 interface BulkActionBarProps {
   selectedIds: string[]
@@ -21,6 +22,7 @@ const STATUS_OPTIONS: { value: TaskStatus; label: string; color: string }[] = [
 export function BulkActionBar({ selectedIds, onClear, onUpdate }: BulkActionBarProps) {
   const [showStatuses, setShowStatuses] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   const applyStatus = async (status: TaskStatus) => {
     setLoading(true)
@@ -37,8 +39,12 @@ export function BulkActionBar({ selectedIds, onClear, onUpdate }: BulkActionBarP
     setLoading(false)
   }
 
-  const deleteAll = async () => {
-    if (!confirm(`Delete ${selectedIds.length} task(s)? This cannot be undone.`)) return
+  const handleDeleteClick = () => {
+    setShowDeleteConfirm(true)
+  }
+
+  const performDeleteAll = async () => {
+    setShowDeleteConfirm(false)
     setLoading(true)
     await Promise.all(selectedIds.map(id => taskService.deleteTask(id)))
     toast.success(`${selectedIds.length} task(s) deleted`)
@@ -48,7 +54,8 @@ export function BulkActionBar({ selectedIds, onClear, onUpdate }: BulkActionBarP
   }
 
   return (
-    <AnimatePresence>
+    <>
+      <AnimatePresence>
       {selectedIds.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -102,7 +109,7 @@ export function BulkActionBar({ selectedIds, onClear, onUpdate }: BulkActionBarP
           </div>
 
           <button
-            onClick={deleteAll}
+            onClick={handleDeleteClick}
             disabled={loading}
             style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(244,63,94,0.12)', color: '#f43f5e', border: '1px solid rgba(244,63,94,0.25)', borderRadius: '10px', padding: '7px 14px', fontSize: '0.82rem', fontWeight: 600 }}
           >
@@ -118,5 +125,15 @@ export function BulkActionBar({ selectedIds, onClear, onUpdate }: BulkActionBarP
         </motion.div>
       )}
     </AnimatePresence>
+      {showDeleteConfirm && (
+        <ConfirmModal
+          title="Delete Tasks"
+          message={`Are you sure you want to delete ${selectedIds.length} task(s)? This cannot be undone.`}
+          confirmText="Delete"
+          onConfirm={performDeleteAll}
+          onCancel={() => setShowDeleteConfirm(false)}
+        />
+      )}
+    </>
   )
 }

@@ -15,6 +15,7 @@ import { AnalyticsCharts } from './components/ui/AnalyticsCharts'
 import { NotificationInbox } from './components/ui/NotificationInbox'
 import { BulkActionBar } from './components/ui/BulkActionBar'
 import { PipelineView } from './components/pipeline/PipelineView'
+import { SettingsModal } from './components/settings/SettingsModal'
 
 import { taskService } from './services/taskService'
 import { getDaysRemaining } from './utils/dateUtils'
@@ -31,6 +32,7 @@ function App() {
   const [filter, setFilter] = useState<FilterValue>('all')
   const [viewMode, setViewMode] = useState<'personal' | 'team'>('personal')
   const [appSection, setAppSection] = useState<'tasks' | 'pipeline'>('tasks')
+  const [showSettings, setShowSettings] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [viewLayout, setViewLayout] = useState<ViewLayout>('list')
   const [showCharts, setShowCharts] = useState(false)
@@ -202,12 +204,16 @@ function App() {
             )}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div>
+            <button 
+              onClick={() => setShowSettings(true)}
+              style={{ textAlign: 'left', background: 'transparent', padding: '4px 8px', borderRadius: '8px', transition: 'background 0.2s' }}
+              className="hover-bg-glass"
+            >
               <p style={{ color: 'white', fontSize: '1rem', fontWeight: 600 }}>{fullName}</p>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
                 {userEmail} • <span style={{ color: 'var(--primary)' }}>{user.user_metadata.team_name || 'General'}</span>
               </p>
-            </div>
+            </button>
             <span style={{ color: 'var(--glass-border)' }}>|</span>
             <button onClick={() => supabase.auth.signOut()} style={{ background: 'transparent', color: 'var(--accent)', fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
               <LogOut size={14} /> Sign Out
@@ -548,6 +554,12 @@ function App() {
         onClear={clearBulk}
         onUpdate={() => { fetchTasks(true); clearBulk() }}
       />
+
+      <AnimatePresence>
+        {showSettings && (
+          <SettingsModal session={session} onClose={() => setShowSettings(false)} />
+        )}
+      </AnimatePresence>
     </div>
   )
 }

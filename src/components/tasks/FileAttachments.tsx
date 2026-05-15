@@ -3,6 +3,7 @@ import { Paperclip, Upload, Trash2, Download, FileText, Image, File } from 'luci
 import { toast } from 'sonner'
 import { type TaskAttachment } from '../../supabase'
 import { attachmentService } from '../../services/attachmentService'
+import { ConfirmModal } from '../ui/ConfirmModal'
 
 interface FileAttachmentsProps {
   taskId: string
@@ -26,6 +27,7 @@ export function FileAttachments({ taskId, currentUserEmail }: FileAttachmentsPro
   const [attachments, setAttachments] = useState<TaskAttachment[]>([])
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [attachmentToDelete, setAttachmentToDelete] = useState<TaskAttachment | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const load = async () => {
@@ -63,8 +65,14 @@ export function FileAttachments({ taskId, currentUserEmail }: FileAttachmentsPro
     a.click()
   }
 
-  const handleDelete = async (att: TaskAttachment) => {
-    if (!confirm(`Remove "${att.file_name}"?`)) return
+  const promptDelete = (att: TaskAttachment) => {
+    setAttachmentToDelete(att)
+  }
+
+  const performDelete = async () => {
+    if (!attachmentToDelete) return
+    const att = attachmentToDelete
+    setAttachmentToDelete(null)
     setAttachments(prev => prev.filter(a => a.id !== att.id))
     const { error } = await attachmentService.deleteAttachment(att.id, att.file_path)
     if (error) { toast.error('Delete failed'); load() }
@@ -116,13 +124,22 @@ export function FileAttachments({ taskId, currentUserEmail }: FileAttachmentsPro
                 <Download size={14} />
               </button>
               {att.uploaded_by === currentUserEmail && (
-                <button onClick={() => handleDelete(att)} style={{ background: 'transparent', color: 'rgba(255,255,255,0.2)', padding: '4px' }}>
+                <button onClick={() => promptDelete(att)} style={{ background: 'transparent', color: 'rgba(255,255,255,0.2)', padding: '4px' }}>
                   <Trash2 size={13} />
                 </button>
               )}
             </div>
           ))}
         </div>
+      )}
+      {attachmentToDelete && (
+        <ConfirmModal
+          title="Remove Attachment"
+          message={`Are you sure you want to remove "${attachmentToDelete.file_name}"?`}
+          confirmText="Remove"
+          onConfirm={performDelete}
+          onCancel={() => setAttachmentToDelete(null)}
+        />
       )}
     </div>
   )
