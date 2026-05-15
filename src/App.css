@@ -309,8 +309,9 @@
     padding: 8px !important;
   }
 
-  /* Center icons in collapsed nav buttons */
-  .task-grid.sidebar-collapsed .sidebar button {
+  /* Center icons in collapsed nav buttons and links */
+  .task-grid.sidebar-collapsed .sidebar button,
+  .task-grid.sidebar-collapsed .sidebar a {
     justify-content: center;
     padding: 10px !important;
   }
