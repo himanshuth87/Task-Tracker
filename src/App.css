@@ -22,6 +22,13 @@
 @media (min-width: 992px) {
   .task-grid {
     grid-template-columns: 280px 1fr;
+    transition: grid-template-columns 0.3s ease;
+  }
+  .task-grid.sidebar-collapsed {
+    grid-template-columns: 64px 1fr;
+  }
+  .task-grid.sidebar-collapsed .sidebar {
+    overflow: hidden;
   }
 }
 

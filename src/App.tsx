@@ -16,6 +16,7 @@ import { NotificationInbox } from './components/ui/NotificationInbox'
 import { BulkActionBar } from './components/ui/BulkActionBar'
 import { PipelineView } from './components/pipeline/PipelineView'
 import { SettingsModal } from './components/settings/SettingsModal'
+import { DashboardView } from './components/dashboard/DashboardView'
 
 import { taskService } from './services/taskService'
 import { getDaysRemaining } from './utils/dateUtils'
@@ -24,6 +25,7 @@ import { type Task } from './supabase'
 
 type FilterValue = 'all' | 'pending' | 'in_progress' | 'blocked' | 'completed' | 'assigned_to_me'
 type ViewLayout = 'list' | 'kanban'
+type AppSection = 'dashboard' | 'tasks' | 'pipeline'
 
 function App() {
   const [session, setSession] = useState<Session | null>(null)
@@ -31,9 +33,11 @@ function App() {
   const [showNotifications, setShowNotifications] = useState(false)
   const [filter, setFilter] = useState<FilterValue>('all')
   const [viewMode, setViewMode] = useState<'personal' | 'team'>('personal')
-  const [appSection, setAppSection] = useState<'tasks' | 'pipeline'>('tasks')
+  const [appSection, setAppSection] = useState<AppSection>('dashboard')
   const [showSettings, setShowSettings] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [viewLayout, setViewLayout] = useState<ViewLayout>('list')
   const [showCharts, setShowCharts] = useState(false)
   const [bulkMode, setBulkMode] = useState(false)
@@ -50,6 +54,24 @@ function App() {
   const [totalCount, setTotalCount] = useState(0)
   const [allTasks, setAllTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedSearch(searchTerm), 300)
+    return () => clearTimeout(handler)
+  }, [searchTerm])
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement).tagName.toLowerCase()
+      const isInput = tag === 'input' || tag === 'textarea' || tag === 'select'
+      if (e.key === 'Escape') { setShowForm(false); setShowSettings(false); setShowNotifications(false) }
+      if (isInput) return
+      if (e.key === 'n' || e.key === 'N') { setAppSection('tasks'); setShowForm(true) }
+      if (e.key === '/') { e.preventDefault(); document.querySelector<HTMLInputElement>('input[placeholder*="Search"]')?.focus() }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session))
@@ -74,7 +96,7 @@ function App() {
     const currentPage = resetPage ? 0 : page
     if (resetPage) setPage(0)
 
-    const { data, error, count } = await taskService.fetchTasks(session, viewMode, filter, currentPage)
+    const { data, error, count } = await taskService.fetchTasks(session, viewMode, filter, currentPage, debouncedSearch)
     if (!error) {
       if (resetPage || currentPage === 0) {
         setAllTasks(data as Task[])
@@ -93,7 +115,7 @@ function App() {
     const nextPage = page + 1
     setPage(nextPage)
     setLoading(true)
-    const { data, error, count } = await taskService.fetchTasks(session!, viewMode, filter, nextPage)
+    const { data, error, count } = await taskService.fetchTasks(session!, viewMode, filter, nextPage, debouncedSearch)
     if (!error) {
       setAllTasks(prev => {
         const ids = new Set(prev.map(t => t.id))
@@ -106,7 +128,7 @@ function App() {
 
   useEffect(() => {
     if (session) fetchTasks(true)
-  }, [session, viewMode, filter])
+  }, [session, viewMode, filter, debouncedSearch])
 
   // Real-time subscription
   useEffect(() => {
@@ -129,12 +151,8 @@ function App() {
 
   const filteredTasks = allTasks.filter(task => {
     const matchesStatus = filter === 'all' || filter === 'assigned_to_me' || task.status === filter
-    const matchesSearch = !searchTerm ||
-      task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (task.remarks?.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (task.task_giver?.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (task.assigned_to_email?.toLowerCase().includes(searchTerm.toLowerCase()))
-    return matchesStatus && matchesSearch
+    // Search is now handled entirely on the server-side via fetchTasks
+    return matchesStatus
   })
 
   const stats = {
@@ -315,8 +333,8 @@ function App() {
         aria-hidden="true"
       />
 
-      <div className="task-grid">
-        <aside className={`sidebar${showSidebar ? ' sidebar-open' : ''}`}>
+      <div className={`task-grid${sidebarCollapsed ? ' sidebar-collapsed' : ''}`}>
+        <aside className={`sidebar${showSidebar ? ' sidebar-open' : ''}`} style={{ overflowY: sidebarCollapsed ? 'hidden' : 'auto' }}>
           {/* Analytics */}
           {appSection === 'tasks' && (
             <div className="glass-card" style={{ padding: '24px', marginBottom: '24px' }}>
@@ -379,8 +397,9 @@ function App() {
           <div className="glass-card" style={{ padding: '20px', marginBottom: '24px' }}>
             <h3 style={{ marginBottom: '14px', fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Section</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <FilterBtn active={appSection === 'tasks'} onClick={() => setAppSection('tasks')} label="Task Tracker" icon={<Briefcase size={16} />} />
-              <FilterBtn active={appSection === 'pipeline'} onClick={() => setAppSection('pipeline')} label="Mfg Pipeline" icon={<Factory size={16} />} />
+              <FilterBtn active={appSection === 'dashboard'} onClick={() => setAppSection('dashboard')} label={sidebarCollapsed ? '' : 'Dashboard'} icon={<BarChart3 size={16} />} />
+              <FilterBtn active={appSection === 'tasks'} onClick={() => setAppSection('tasks')} label={sidebarCollapsed ? '' : 'Task Tracker'} icon={<Briefcase size={16} />} />
+              <FilterBtn active={appSection === 'pipeline'} onClick={() => setAppSection('pipeline')} label={sidebarCollapsed ? '' : 'Mfg Pipeline'} icon={<Factory size={16} />} />
             </div>
           </div>
 
@@ -411,9 +430,26 @@ function App() {
               </div>
             </>
           )}
+          {/* Collapse toggle */}
+          <button
+            onClick={() => setSidebarCollapsed(v => !v)}
+            style={{ marginTop: '12px', width: '100%', background: 'rgba(255,255,255,0.04)', color: 'var(--text-muted)', borderRadius: '10px', padding: '8px', fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', border: '1px solid var(--glass-border)' }}
+            title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            {sidebarCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+            {!sidebarCollapsed && <span>Collapse</span>}
+          </button>
         </aside>
 
         <main>
+          {appSection === 'dashboard' && (
+            <DashboardView
+              session={session}
+              viewMode={viewMode}
+              onNavigateToTasks={() => setAppSection('tasks')}
+              onUpdate={() => fetchTasks(true)}
+            />
+          )}
           {appSection === 'pipeline' && <PipelineView session={session} />}
 
           {appSection === 'tasks' && (

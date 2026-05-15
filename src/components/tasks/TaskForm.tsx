@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { toast } from 'sonner'
-import { Plus, X, Paperclip, CheckSquare, File, Image, FileText } from 'lucide-react'
+import { Plus, X, Paperclip, CheckSquare, File, Image, FileText, Tag } from 'lucide-react'
 import { taskService } from '../../services/taskService'
 import { subtaskService } from '../../services/subtaskService'
 import { attachmentService } from '../../services/attachmentService'
@@ -41,6 +41,8 @@ export function TaskForm({ onTaskAdded, userId, userEmail, fullName, teamName }:
   const [remarks, setRemarks] = useState('')
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium')
   const [recurrence, setRecurrence] = useState<TaskRecurrence>('none')
+  const [tags, setTags] = useState<string[]>([])
+  const [tagInput, setTagInput] = useState('')
   const [loading, setLoading] = useState(false)
 
   // Draft checklist items (pre-creation)
@@ -61,6 +63,16 @@ export function TaskForm({ onTaskAdded, userId, userEmail, fullName, teamName }:
   const removeChecklistItem = (i: number) => {
     setChecklistItems(prev => prev.filter((_, idx) => idx !== i))
   }
+
+  const addTag = () => {
+    const t = tagInput.trim().toLowerCase().replace(/[^a-z0-9-]/g, '')
+    if (!t || tags.includes(t)) { setTagInput(''); return }
+    if (tags.length >= 5) { toast.error('Max 5 tags allowed'); return }
+    setTags(prev => [...prev, t])
+    setTagInput('')
+  }
+
+  const removeTag = (i: number) => setTags(prev => prev.filter((_, idx) => idx !== i))
 
   const handleFileAdd = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -90,6 +102,9 @@ export function TaskForm({ onTaskAdded, userId, userEmail, fullName, teamName }:
       user_id: userId,
       user_email: userEmail,
       team_name: teamName || 'General',
+      tags,
+      time_logged_minutes: 0,
+      position: 0,
     }, userEmail, fullName)
 
     if (error || !newTask) {
@@ -134,6 +149,8 @@ export function TaskForm({ onTaskAdded, userId, userEmail, fullName, teamName }:
     setRecurrence('none')
     setChecklistItems([])
     setChecklistInput('')
+    setTags([])
+    setTagInput('')
     setDraftFiles([])
     setLoading(false)
     onTaskAdded()
@@ -196,6 +213,46 @@ export function TaskForm({ onTaskAdded, userId, userEmail, fullName, teamName }:
             maxLength={1000}
             style={{ width: '100%', height: '80px', resize: 'vertical', fontFamily: 'inherit' }}
           />
+        </div>
+
+        {/* ── Tags ──────────────────────────────────── */}
+        <div style={{ gridColumn: 'span 2' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+            <Tag size={15} color="var(--primary)" />
+            {label('Labels / Tags (optional)')}
+          </div>
+          
+          {tags.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' }}>
+              {tags.map((t, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(99,102,241,0.1)', color: 'var(--primary)', padding: '4px 10px', borderRadius: '14px', fontSize: '0.75rem', fontWeight: 600 }}>
+                  #{t}
+                  <button type="button" onClick={() => removeTag(i)} style={{ background: 'transparent', color: 'var(--primary)', padding: '2px', display: 'flex' }}>
+                    <X size={12} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <input
+              value={tagInput}
+              onChange={e => setTagInput(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addTag() } }}
+              placeholder="Add tag e.g. urgent, q2, bug (Enter to add)"
+              maxLength={20}
+              style={{ flex: 1, fontSize: '0.88rem' }}
+            />
+            <button
+              type="button"
+              onClick={addTag}
+              disabled={!tagInput.trim()}
+              style={{ background: 'rgba(99,102,241,0.15)', color: 'var(--primary)', border: '1px solid rgba(99,102,241,0.3)', borderRadius: '12px', padding: '10px 14px', opacity: !tagInput.trim() ? 0.4 : 1 }}
+            >
+              <Plus size={16} />
+            </button>
+          </div>
         </div>
 
         {/* ── Checklist ─────────────────────────────── */}

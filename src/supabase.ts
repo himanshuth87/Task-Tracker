@@ -31,6 +31,10 @@ export type Task = {
   outlook_link: string | null;
   team_name?: string;
   recurrence: TaskRecurrence;
+  tags?: string[];
+  time_logged_minutes?: number;
+  position?: number;
+  deleted_at?: string | null;
 };
 
 export type TaskComment = {

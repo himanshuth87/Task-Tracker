@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Calendar, Mail, Edit2, Trash2, Check, X, User, Clock, MessageCircle, ChevronDown, ChevronUp, AlertCircle, Loader2, CheckSquare, Paperclip, Link2, History, Square } from 'lucide-react'
+import { Calendar, Mail, Edit2, Trash2, Check, X, User, Clock, MessageCircle, ChevronDown, ChevronUp, AlertCircle, Loader2, CheckSquare, Paperclip, Link2, History, Square, Timer } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { type Task, type TaskStatus, supabase } from '../../supabase'
@@ -40,7 +40,8 @@ type Panel = 'comments' | 'subtasks' | 'attachments' | 'dependencies' | 'activit
 
 export function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId, currentUserEmail, currentUserName, isSelected, onToggleSelect, bulkMode }: TaskItemProps) {
   const [isEditing, setIsEditing] = useState(false)
-  const [editedTask, setEditedTask] = useState({ ...task })
+  const [editedTask, setEditedTask] = useState({ ...task, tags: task.tags || [], time_logged_minutes: task.time_logged_minutes || 0 })
+  const [tagInput, setTagInput] = useState('')
   const [activePanel, setActivePanel] = useState<Panel>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [subtasksInfo, setSubtasksInfo] = useState({ total: 0, completed: 0 })
@@ -92,6 +93,8 @@ export function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId, curre
       deadline: editedTask.deadline,
       priority: editedTask.priority,
       remarks: editedTask.remarks,
+      tags: editedTask.tags,
+      time_logged_minutes: editedTask.time_logged_minutes,
     }, currentUserEmail, currentUserName)
     if (!error) {
       toast.success('Task updated')
@@ -112,7 +115,29 @@ export function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId, curre
   const isDueSoon = task.status !== 'completed' && daysRemaining !== null && daysRemaining >= 0 && daysRemaining <= 2
   const isOverdue = task.status !== 'completed' && daysRemaining !== null && daysRemaining < 0
   const isOwner = task.user_id === currentUserId
+  const isAssignee = task.assigned_to_email === currentUserEmail
   const statusCfg = STATUS_CONFIG[task.status] ?? STATUS_CONFIG.pending
+
+  const addTag = () => {
+    const t = tagInput.trim().toLowerCase().replace(/[^a-z0-9-]/g, '')
+    if (!t || editedTask.tags.includes(t)) { setTagInput(''); return }
+    if (editedTask.tags.length >= 5) { toast.error('Max 5 tags'); return }
+    setEditedTask(prev => ({ ...prev, tags: [...prev.tags, t] }))
+    setTagInput('')
+  }
+  const removeTag = (i: number) => {
+    setEditedTask(prev => ({ ...prev, tags: prev.tags.filter((_, idx) => idx !== i) }))
+  }
+
+  const handleTimeLog = async (minutes: number) => {
+    const newTotal = (task.time_logged_minutes || 0) + minutes
+    if (newTotal < 0) return
+    const { error } = await taskService.updateTask(task.id, { time_logged_minutes: newTotal }, currentUserEmail, currentUserName)
+    if (!error) {
+      toast.success(`Logged ${minutes > 0 ? '+' : ''}${minutes}m`)
+      onUpdate()
+    }
+  }
 
   const panelBtn = (icon: React.ReactNode, panel: Panel, label: string) => (
     <button
@@ -235,6 +260,11 @@ export function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId, curre
                     {task.team_name}
                   </span>
                 )}
+                {task.tags && task.tags.map((t, i) => (
+                  <span key={i} style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.9)', background: 'rgba(255,255,255,0.15)', padding: '2px 8px', borderRadius: '10px' }}>
+                    #{t}
+                  </span>
+                ))}
               </div>
             </div>
           )}
@@ -289,6 +319,23 @@ export function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId, curre
               placeholder="Remarks..."
               maxLength={1000}
             />
+            <div style={{ gridColumn: 'span 2', display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Tags:</span>
+              {editedTask.tags.map((t, i) => (
+                <span key={i} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', background: 'rgba(255,255,255,0.1)', padding: '2px 8px', borderRadius: '10px' }}>
+                  #{t} <button type="button" onClick={() => removeTag(i)} style={{ background: 'transparent', color: 'rgba(255,255,255,0.5)' }}><X size={10} /></button>
+                </span>
+              ))}
+              <input 
+                value={tagInput} onChange={e => setTagInput(e.target.value)} 
+                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addTag() } }}
+                placeholder="+ Add tag (Enter)" style={{ padding: '2px 8px', fontSize: '0.75rem', width: '130px', borderRadius: '10px' }} 
+              />
+            </div>
+            <div style={{ gridColumn: 'span 2', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Initial Time Logged (mins):</span>
+              <input type="number" value={editedTask.time_logged_minutes || 0} onChange={e => setEditedTask({ ...editedTask, time_logged_minutes: parseInt(e.target.value) || 0 })} style={{ width: '80px', padding: '4px 8px' }} />
+            </div>
           </div>
         ) : (
           <>
@@ -316,6 +363,16 @@ export function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId, curre
                 <span>{subtasksInfo.completed} / {subtasksInfo.total} Subtasks</span>
               </div>
             )}
+            <div className="meta-info">
+              <Timer size={13} />
+              <span>{task.time_logged_minutes || 0}m logged</span>
+              {isAssignee && (
+                <div style={{ display: 'flex', gap: '2px', marginLeft: '4px' }}>
+                  <button onClick={() => handleTimeLog(15)} title="+15m" style={{ background: 'rgba(99,102,241,0.1)', color: 'var(--primary)', fontSize: '0.7rem', padding: '1px 4px', borderRadius: '4px' }}>+15</button>
+                  <button onClick={() => handleTimeLog(60)} title="+1h" style={{ background: 'rgba(99,102,241,0.1)', color: 'var(--primary)', fontSize: '0.7rem', padding: '1px 4px', borderRadius: '4px' }}>+1h</button>
+                </div>
+              )}
+            </div>
           </>
         )}
       </div>

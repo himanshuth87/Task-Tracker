@@ -24,12 +24,14 @@ function shiftDate(dateStr: string | null, days: number): string | null {
 const PAGE_SIZE = 20
 
 export const taskService = {
-  async fetchTasks(session: any, viewMode: 'personal' | 'team', filter: string, page = 0) {
+  async fetchTasks(session: any, viewMode: 'personal' | 'team', filter: string, page = 0, searchTerm = '') {
     if (!session) return { data: [], error: null, count: 0 }
 
     let query = supabase
       .from('tasks')
       .select('*', { count: 'exact' })
+      .is('deleted_at', null)
+      .order('position', { ascending: true })
       .order('created_at', { ascending: false })
       .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1)
 
@@ -44,16 +46,22 @@ export const taskService = {
       query = query.eq('team_name', teamName)
     }
 
+    if (searchTerm) {
+      query = query.or(`title.ilike.%${searchTerm}%,remarks.ilike.%${searchTerm}%,task_giver.ilike.%${searchTerm}%,assigned_to_email.ilike.%${searchTerm}%,tags.cs.{${searchTerm.toLowerCase()}}`)
+    }
+
     const { data, error, count } = await query
     return { data: data || [], error, count: count || 0 }
   },
 
-  async fetchAllTasks(session: any, viewMode: 'personal' | 'team', filter: string) {
+  async fetchAllTasks(session: any, viewMode: 'personal' | 'team', filter: string, searchTerm = '') {
     if (!session) return { data: [], error: null }
 
     let query = supabase
       .from('tasks')
       .select('*')
+      .is('deleted_at', null)
+      .order('position', { ascending: true })
       .order('created_at', { ascending: false })
 
     if (viewMode === 'personal') {
@@ -65,6 +73,10 @@ export const taskService = {
     } else if (viewMode === 'team') {
       const teamName = session.user.user_metadata.team_name || 'General'
       query = query.eq('team_name', teamName)
+    }
+
+    if (searchTerm) {
+      query = query.or(`title.ilike.%${searchTerm}%,remarks.ilike.%${searchTerm}%,task_giver.ilike.%${searchTerm}%,assigned_to_email.ilike.%${searchTerm}%,tags.cs.{${searchTerm.toLowerCase()}}`)
     }
 
     return await query
@@ -149,7 +161,26 @@ export const taskService = {
   },
 
   async deleteTask(taskId: string) {
+    return await supabase.from('tasks').update({ deleted_at: new Date().toISOString() }).eq('id', taskId)
+  },
+
+  async restoreTask(taskId: string) {
+    return await supabase.from('tasks').update({ deleted_at: null }).eq('id', taskId)
+  },
+
+  async hardDeleteTask(taskId: string) {
     return await supabase.from('tasks').delete().eq('id', taskId)
+  },
+
+  async fetchDeletedTasks(session: any, viewMode: 'personal' | 'team') {
+    if (!session) return { data: [], error: null }
+    let query = supabase.from('tasks').select('*').not('deleted_at', 'is', null).order('deleted_at', { ascending: false })
+    if (viewMode === 'personal') {
+      query = query.eq('user_id', session.user.id)
+    } else if (viewMode === 'team') {
+      query = query.eq('team_name', session.user.user_metadata.team_name || 'General')
+    }
+    return await query
   },
 
   subscribeToTasks(callback: (payload: any) => void) {
