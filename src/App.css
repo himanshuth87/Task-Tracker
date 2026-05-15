@@ -255,6 +255,58 @@
   border: 2px solid var(--bg-dark);
 }
 
+/* ── Utility classes ─────────────────────────────── */
+
+.hover-bg-glass:hover {
+  background: var(--glass-bg) !important;
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* ── Modal overlay ─────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+[data-theme="light"] .modal-overlay {
+  background: rgba(0, 0, 0, 0.35);
+}
+
+/* ── Sidebar collapsed state (desktop only) ─────────────────────── */
+@media (min-width: 992px) {
+  /* Hide content that shouldn't show in icon-only mode */
+  .task-grid.sidebar-collapsed .sidebar-analytics,
+  .task-grid.sidebar-collapsed .sidebar-view,
+  .task-grid.sidebar-collapsed .sidebar-status {
+    display: none;
+  }
+
+  .task-grid.sidebar-collapsed .sidebar .glass-card {
+    padding: 8px !important;
+  }
+
+  /* Center icons in collapsed nav buttons */
+  .task-grid.sidebar-collapsed .sidebar button {
+    justify-content: center;
+    padding: 10px !important;
+  }
+
+  .task-grid.sidebar-collapsed .sidebar .collapse-btn {
+    padding: 8px !important;
+  }
+}
+
 /* ── Light theme component overrides ─────────────────────────────── */
 /* Variables live in index.css; only component-specific styles here  */
 

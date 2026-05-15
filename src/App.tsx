@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Plus, BarChart3, LogOut, Bell, Download, Users, Briefcase, Zap, UserCheck, Factory, Search, TrendingUp, AlertCircle, Clock, LayoutGrid, List, BarChart2, ChevronDown, ChevronUp, Sun, Moon, Menu, X as XIcon } from 'lucide-react'
+import { Plus, BarChart3, LogOut, Bell, Download, Users, Briefcase, Zap, UserCheck, Factory, Search, TrendingUp, AlertCircle, Clock, LayoutGrid, List, BarChart2, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Sun, Moon, Menu, X as XIcon } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import './App.css'
 import { supabase } from './supabase'
@@ -223,7 +223,7 @@ function App() {
               style={{ textAlign: 'left', background: 'transparent', padding: '4px 8px', borderRadius: '8px', transition: 'background 0.2s' }}
               className="hover-bg-glass"
             >
-              <p style={{ color: 'white', fontSize: '1rem', fontWeight: 600 }}>{fullName}</p>
+              <p style={{ color: 'var(--text-main)', fontSize: '1rem', fontWeight: 600 }}>{fullName}</p>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
                 {userEmail} • <span style={{ color: 'var(--primary)' }}>{user.user_metadata.team_name || 'General'}</span>
               </p>
@@ -337,7 +337,7 @@ function App() {
         <aside className={`sidebar${showSidebar ? ' sidebar-open' : ''}`} style={{ overflowY: sidebarCollapsed ? 'hidden' : 'auto' }}>
           {/* Analytics */}
           {appSection === 'tasks' && (
-            <div className="glass-card" style={{ padding: '24px', marginBottom: '24px' }}>
+            <div className="glass-card sidebar-analytics" style={{ padding: '24px', marginBottom: '24px' }}>
               <h3 style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <BarChart3 size={18} color="var(--primary)" /> Analytics
               </h3>
@@ -405,7 +405,7 @@ function App() {
 
           {appSection === 'tasks' && (
             <>
-              <div className="glass-card" style={{ padding: '24px', marginBottom: '24px' }}>
+              <div className="glass-card sidebar-view" style={{ padding: '24px', marginBottom: '24px' }}>
                 <h3 style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <Users size={18} color="var(--primary)" /> View
                 </h3>
@@ -416,7 +416,7 @@ function App() {
                 </div>
               </div>
 
-              <div className="glass-card" style={{ padding: '24px' }}>
+              <div className="glass-card sidebar-status" style={{ padding: '24px' }}>
                 <h3 style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <Clock size={18} color="var(--primary)" /> Status
                 </h3>
@@ -430,13 +430,14 @@ function App() {
               </div>
             </>
           )}
-          {/* Collapse toggle */}
+          {/* Collapse toggle — desktop only */}
           <button
             onClick={() => setSidebarCollapsed(v => !v)}
+            className="collapse-btn"
             style={{ marginTop: '12px', width: '100%', background: 'rgba(255,255,255,0.04)', color: 'var(--text-muted)', borderRadius: '10px', padding: '8px', fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', border: '1px solid var(--glass-border)' }}
             title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
-            {sidebarCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+            {sidebarCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
             {!sidebarCollapsed && <span>Collapse</span>}
           </button>
         </aside>

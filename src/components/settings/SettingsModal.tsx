@@ -263,7 +263,7 @@ export function SettingsModal({ session, onClose }: SettingsModalProps) {
                     {invitations.map(inv => (
                       <div key={inv.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--glass-border)', borderRadius: '10px' }}>
                         <div>
-                          <p style={{ fontSize: '0.9rem', fontWeight: 500, color: 'white' }}>{inv.invited_email}</p>
+                          <p style={{ fontSize: '0.9rem', fontWeight: 500, color: 'var(--text-main)' }}>{inv.invited_email}</p>
                           <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Invited by {inv.invited_by_name}</p>
                         </div>
                         <button onClick={() => handleRemoveInvite(inv.id)} className="action-btn" style={{ background: 'rgba(244,63,94,0.1)', color: '#f43f5e', border: '1px solid rgba(244,63,94,0.2)' }} title="Revoke invite">
@@ -284,7 +284,7 @@ export function SettingsModal({ session, onClose }: SettingsModalProps) {
                   {teamMembers.map(member => (
                     <div key={member.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--glass-border)', borderRadius: '10px' }}>
                       <div>
-                        <p style={{ fontSize: '0.95rem', fontWeight: 600, color: 'white' }}>{member.full_name} {member.id === session.user.id && '(You)'}</p>
+                        <p style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-main)' }}>{member.full_name} {member.id === session.user.id && '(You)'}</p>
                         <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{member.email}</p>
                       </div>
                       
@@ -293,7 +293,7 @@ export function SettingsModal({ session, onClose }: SettingsModalProps) {
                           <select 
                             value={member.role}
                             onChange={(e) => handleChangeRole(member.id, e.target.value)}
-                            style={{ padding: '6px 10px', fontSize: '0.8rem', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'white' }}
+                            style={{ padding: '6px 10px', fontSize: '0.8rem', background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'var(--text-main)' }}
                           >
                             <option value="member">Member</option>
                             <option value="manager">Manager</option>
