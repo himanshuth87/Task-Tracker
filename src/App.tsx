@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Plus, BarChart3, LogOut, Bell, Download, Users, Briefcase, Zap, UserCheck, Factory, Search, TrendingUp, AlertCircle, Clock, LayoutGrid, List, BarChart2, ChevronDown, ChevronUp, Sun, Moon } from 'lucide-react'
+import { Plus, BarChart3, LogOut, Bell, Download, Users, Briefcase, Zap, UserCheck, Factory, Search, TrendingUp, AlertCircle, Clock, LayoutGrid, List, BarChart2, ChevronDown, ChevronUp, Sun, Moon, Menu, X as XIcon } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import './App.css'
 import { supabase } from './supabase'
@@ -41,6 +41,7 @@ function App() {
   const [isLightMode, setIsLightMode] = useState(() => {
     return localStorage.getItem('tasktracker_theme') === 'light'
   })
+  const [showSidebar, setShowSidebar] = useState(false)
 
   // Pagination
   const [page, setPage] = useState(0)
@@ -63,6 +64,11 @@ function App() {
       localStorage.setItem('tasktracker_theme', 'dark')
     }
   }, [isLightMode])
+
+  useEffect(() => {
+    document.body.classList.toggle('modal-open', showForm)
+    return () => { document.body.classList.remove('modal-open') }
+  }, [showForm])
 
   const fetchTasks = useCallback(async (resetPage = false) => {
     if (!session) return
@@ -210,6 +216,16 @@ function App() {
         </div>
 
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          {/* Sidebar toggle — mobile only */}
+          <button
+            onClick={() => setShowSidebar(v => !v)}
+            className="glass-card action-btn hamburger-btn"
+            aria-label="Toggle sidebar"
+            style={{ padding: '10px 14px' }}
+          >
+            {showSidebar ? <XIcon size={20} /> : <Menu size={20} />}
+          </button>
+
           {/* Notification bell */}
           <div style={{ position: 'relative' }}>
             <button
@@ -290,8 +306,15 @@ function App() {
         )}
       </AnimatePresence>
 
+      {/* Mobile sidebar overlay */}
+      <div
+        className={`sidebar-overlay${showSidebar ? ' open' : ''}`}
+        onClick={() => setShowSidebar(false)}
+        aria-hidden="true"
+      />
+
       <div className="task-grid">
-        <aside>
+        <aside className={`sidebar${showSidebar ? ' sidebar-open' : ''}`}>
           {/* Analytics */}
           {appSection === 'tasks' && (
             <div className="glass-card" style={{ padding: '24px', marginBottom: '24px' }}>
@@ -458,9 +481,10 @@ function App() {
 
               {/* Task content */}
               {loading && allTasks.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '60px' }}>
-                  <div className="loader" />
-                  <p style={{ color: 'var(--text-muted)', marginTop: '20px' }}>Syncing tasks...</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {[0, 1, 2, 3].map(i => (
+                    <div key={i} className="skeleton-card" style={{ animationDelay: `${i * 0.1}s` }} />
+                  ))}
                 </div>
               ) : filteredTasks.length === 0 ? (
                 <div className="glass-card" style={{ padding: '80px 40px', textAlign: 'center' }}>

@@ -147,6 +147,88 @@
   border-radius: 20px;
 }
 
+/* ── Mobile sidebar drawer ─────────────────────────────── */
+
+/* Hamburger toggle — hidden on desktop */
+.hamburger-btn {
+  display: none;
+}
+
+/* Sidebar overlay backdrop — mobile only */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  z-index: 399;
+}
+
+@media (max-width: 991px) {
+  .hamburger-btn {
+    display: flex;
+  }
+
+  .sidebar-overlay {
+    display: block;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .sidebar-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Pull the sidebar out of the grid flow and make it a fixed drawer */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: min(300px, 85vw);
+    z-index: 400;
+    overflow-y: auto;
+    padding: var(--space-6);
+    background: var(--card-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-right: 1px solid var(--glass-border);
+    box-shadow: 4px 0 32px rgba(0, 0, 0, 0.5);
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .sidebar.sidebar-open {
+    transform: translateX(0);
+  }
+
+  /* On mobile the grid is already 1 column; sidebar is out of flow */
+  .task-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Tablet adjustments (768px – 991px) ─────────────────────────────── */
+@media (min-width: 768px) and (max-width: 991px) {
+  .app-container {
+    padding: var(--space-6) var(--space-6);
+  }
+
+  .header {
+    margin-bottom: var(--space-8);
+  }
+}
+
+/* ── Pipeline stats — responsive grid ────────────────────────────── */
+.pipeline-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--space-3);
+}
+
 /* Notification dot badge */
 .notification-dot {
   position: absolute;
@@ -166,28 +248,8 @@
   border: 2px solid var(--bg-dark);
 }
 
-/* ── Light theme ─────────────────────────────── */
-[data-theme="light"] {
-  color-scheme: light;
-  color: #1e1e2e;
-  background-color: #f0f0f7;
-
-  --primary: #4f46e5;
-  --primary-glow: rgba(79, 70, 229, 0.25);
-  --secondary: #7c3aed;
-  --accent: #e11d48;
-  --bg-dark: #f8fafc;
-  --card-bg: rgba(255, 255, 255, 0.85);
-  --border-color: rgba(0, 0, 0, 0.1);
-  --text-muted: #64748b;
-  --text-main: #1e1e2e;
-  --glass-bg: rgba(255, 255, 255, 0.65);
-  --glass-border: rgba(0, 0, 0, 0.08);
-}
-
-[data-theme="light"] body {
-  background: radial-gradient(circle at 50% 0%, #ddd6fe 0%, #f0f0f7 100%);
-}
+/* ── Light theme component overrides ─────────────────────────────── */
+/* Variables live in index.css; only component-specific styles here  */
 
 [data-theme="light"] input,
 [data-theme="light"] select,
@@ -218,10 +280,3 @@
   background: rgba(255, 255, 255, 0.95);
 }
 
-[data-theme="light"] ::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.12);
-}
-
-[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.22);
-}

@@ -59,7 +59,7 @@ export function PipelineView({ session }: PipelineViewProps) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {/* Stats bar */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
+      <div className="pipeline-stats">
         {[
           { label: 'Total Styles', value: stats.total, icon: <Package size={16} />, color: 'var(--primary)' },
           { label: 'In Progress', value: stats.active, icon: <Clock size={16} />, color: '#f59e0b' },
@@ -69,7 +69,7 @@ export function PipelineView({ session }: PipelineViewProps) {
           <div key={stat.label} className="glass-card" style={{ padding: '16px 20px', display: 'flex', gap: '12px', alignItems: 'center' }}>
             <div style={{ color: stat.color }}>{stat.icon}</div>
             <div>
-              <div style={{ fontSize: '1.4rem', fontWeight: 700, color: 'white', lineHeight: 1 }}>{stat.value}</div>
+              <div style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--text-main)', lineHeight: 1 }}>{stat.value}</div>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>{stat.label}</div>
             </div>
           </div>

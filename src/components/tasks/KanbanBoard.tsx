@@ -49,7 +49,7 @@ function KanbanCard({ task }: { task: Task }) {
         userSelect: 'none',
       }}
     >
-      <p style={{ fontSize: '0.9rem', fontWeight: 600, color: task.status === 'completed' ? 'var(--text-muted)' : 'white', textDecoration: task.status === 'completed' ? 'line-through' : 'none', lineHeight: 1.4 }}>
+      <p style={{ fontSize: '0.9rem', fontWeight: 600, color: task.status === 'completed' ? 'var(--text-muted)' : 'var(--text-main)', textDecoration: task.status === 'completed' ? 'line-through' : 'none', lineHeight: 1.4 }}>
         {task.title}
       </p>
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '8px', flexWrap: 'wrap' }}>

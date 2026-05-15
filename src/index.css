@@ -19,7 +19,7 @@
   --primary-glow: rgba(99, 102, 241, 0.3);
   --secondary: #a855f7;
   --accent: #f43f5e;
-  
+
   /* Dark Theme Variables (Default) */
   --bg-dark: #000000;
   --body-bg: #000000;
@@ -33,20 +33,52 @@
   --input-text: white;
   --scrollbar-thumb: rgba(255, 255, 255, 0.1);
   --scrollbar-thumb-hover: rgba(255, 255, 255, 0.2);
+
+  /* Spacing scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+
+  /* Radius scale */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
 }
 
+/* Light theme — single source of truth for all variable overrides */
 [data-theme="light"] {
   color-scheme: light;
+
+  /* Primary palette — darker for better contrast on light backgrounds */
+  --primary: #4f46e5;
+  --primary-glow: rgba(79, 70, 229, 0.25);
+  --secondary: #7c3aed;
+  --accent: #e11d48;
+
+  /* Surfaces */
   --bg-dark: #f8fafc;
-  --body-bg: radial-gradient(circle at 50% 0%, #e0e7ff 0%, #f8fafc 100%);
-  --card-bg: rgba(255, 255, 255, 0.8);
+  --body-bg: radial-gradient(circle at 50% 0%, #ddd6fe 0%, #f0f0f7 100%);
+  --card-bg: rgba(255, 255, 255, 0.85);
   --border-color: rgba(0, 0, 0, 0.1);
+
+  /* Text */
   --text-muted: #64748b;
-  --text-main: #1e293b;
-  --glass-bg: rgba(255, 255, 255, 0.6);
-  --glass-border: rgba(0, 0, 0, 0.15);
+  --text-main: #1e1e2e;
   --grad-start: var(--primary);
-  --input-text: #1e293b;
+  --input-text: #1e1e2e;
+
+  /* Glass */
+  --glass-bg: rgba(255, 255, 255, 0.65);
+  --glass-border: rgba(0, 0, 0, 0.08);
+
+  /* Scrollbar */
   --scrollbar-thumb: rgba(0, 0, 0, 0.15);
   --scrollbar-thumb-hover: rgba(0, 0, 0, 0.25);
 }
@@ -102,20 +134,71 @@ button:active {
   transform: scale(0.95);
 }
 
+/* Keyboard focus rings — only appear when navigating by keyboard, not mouse */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
 input, select, textarea {
   background: rgba(128, 128, 128, 0.05);
   border: 1px solid var(--glass-border);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   color: var(--input-text);
   padding: 12px 16px;
   font-family: inherit;
   transition: border-color 0.2s, background 0.2s, color 0.2s;
 }
 
-input:focus {
+input:focus, select:focus, textarea:focus {
   border-color: var(--primary);
   outline: none;
   background: rgba(128, 128, 128, 0.08);
+}
+
+/* Skeleton loader shimmer */
+@keyframes skeleton-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-card {
+  border-radius: var(--radius-2xl);
+  height: 110px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  position: relative;
+  overflow: hidden;
+}
+
+.skeleton-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 25%,
+    rgba(255, 255, 255, 0.06) 50%,
+    transparent 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s infinite linear;
+}
+
+[data-theme="light"] .skeleton-card::after {
+  background: linear-gradient(
+    90deg,
+    transparent 25%,
+    rgba(0, 0, 0, 0.04) 50%,
+    transparent 75%
+  );
+  background-size: 200% 100%;
+}
+
+/* Prevent body scroll when a modal/form is open */
+body.modal-open {
+  overflow: hidden;
 }
 
 /* Custom Scrollbar */
