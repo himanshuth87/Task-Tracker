@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { supabase } from './supabase'
 import { motion } from 'framer-motion'
-import { LogIn, UserPlus, Mail, Lock, Loader2, User, Users, KeyRound, ArrowLeft, Eye, EyeOff } from 'lucide-react'
+import { LogIn, UserPlus, Mail, Lock, Loader2, User, Users, KeyRound, ArrowLeft, Eye, EyeOff, Trash2 } from 'lucide-react'
 
 type AuthView = 'signin' | 'signup' | 'reset'
 
@@ -114,8 +114,40 @@ export function Auth() {
     </label>
   )
 
+  const clearForm = () => { setEmail(''); setPassword(''); setFullName(''); setTeamName('') }
+
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', padding: '20px' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      {/* Top navbar */}
+      <nav style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 28px', borderBottom: '1px solid var(--glass-border)', background: 'var(--card-bg)', backdropFilter: 'blur(12px)' }}>
+        <h1 className="gradient-text" style={{ fontSize: '1.4rem', fontWeight: 700 }}>TaskTracker</h1>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button
+            onClick={() => setView('signin')}
+            title="Sign In"
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', borderRadius: '10px', background: view === 'signin' ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.04)', color: view === 'signin' ? 'var(--primary)' : 'var(--text-muted)', border: '1px solid var(--glass-border)', fontSize: '0.82rem', fontWeight: 600 }}
+          >
+            <LogIn size={15} /> Sign In
+          </button>
+          <button
+            onClick={() => setView('signup')}
+            title="Create account"
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', borderRadius: '10px', background: view === 'signup' ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.04)', color: view === 'signup' ? 'var(--primary)' : 'var(--text-muted)', border: '1px solid var(--glass-border)', fontSize: '0.82rem', fontWeight: 600 }}
+          >
+            <User size={15} /> Register
+          </button>
+          <button
+            onClick={clearForm}
+            title="Clear form"
+            style={{ display: 'flex', alignItems: 'center', padding: '8px 10px', borderRadius: '10px', background: 'rgba(255,255,255,0.04)', color: 'var(--text-muted)', border: '1px solid var(--glass-border)' }}
+          >
+            <Trash2 size={15} />
+          </button>
+        </div>
+      </nav>
+
+      {/* Auth card */}
+      <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' }}>
       <motion.div
         key={view}
         initial={{ opacity: 0, y: 20 }}
@@ -185,15 +217,20 @@ export function Auth() {
                     type="button"
                     onClick={() => setShowPassword(v => !v)}
                     style={{
-                      position: 'absolute', right: '12px', top: '50%',
+                      position: 'absolute', right: '10px', top: '50%',
                       transform: 'translateY(-50%)',
-                      background: 'transparent', color: 'var(--text-muted)',
-                      padding: '4px', display: 'flex', alignItems: 'center',
+                      background: 'rgba(128,128,128,0.12)',
+                      border: '1px solid var(--glass-border)',
+                      borderRadius: '6px',
+                      color: 'var(--text-muted)',
+                      padding: '4px 6px',
+                      display: 'flex', alignItems: 'center',
+                      zIndex: 2, cursor: 'pointer',
                     }}
                     title={showPassword ? 'Hide password' : 'Show password'}
                     tabIndex={-1}
                   >
-                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                   </button>
                 </div>
               </div>
@@ -234,6 +271,7 @@ export function Auth() {
           </div>
         )}
       </motion.div>
+      </div>
     </div>
   )
 }
