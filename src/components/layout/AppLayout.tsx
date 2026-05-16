@@ -104,36 +104,34 @@ export function AppLayout({ session }: { session: Session }) {
   return (
     <div className="app-container">
       <header className="header">
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <h1 className="gradient-text" style={{ fontSize: '2.5rem', fontWeight: 700 }}>TaskTracker</h1>
-            <div className="live-badge">
-              <Zap size={12} fill="#10b981" />
-              <span>LIVE</span>
-            </div>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <button
-              onClick={() => navigate('/settings')}
-              style={{ textAlign: 'left', background: 'transparent', padding: '4px 8px', borderRadius: '8px' }}
-              className="hover-bg-glass"
-            >
-              <p style={{ color: 'var(--text-main)', fontSize: '1rem', fontWeight: 600 }}>{fullName}</p>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
-                {userEmail} • <span style={{ color: 'var(--primary)' }}>{user.user_metadata.team_name || 'General'}</span>
-              </p>
-            </button>
-            <span style={{ color: 'var(--glass-border)' }}>|</span>
-            <button
-              onClick={() => supabase.auth.signOut()}
-              style={{ background: 'transparent', color: 'var(--accent)', fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}
-            >
-              <LogOut size={14} /> Sign Out
-            </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <h1 className="gradient-text" style={{ fontSize: '2.5rem', fontWeight: 700 }}>TaskTracker</h1>
+          <div className="live-badge">
+            <Zap size={12} fill="#10b981" />
+            <span>LIVE</span>
           </div>
         </div>
 
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          {/* User info + sign out */}
+          <button
+            onClick={() => navigate('/settings')}
+            style={{ textAlign: 'left', background: 'transparent', padding: '4px 8px', borderRadius: '8px' }}
+            className="hover-bg-glass"
+          >
+            <p style={{ color: 'var(--text-main)', fontSize: '0.95rem', fontWeight: 600 }}>{fullName}</p>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+              {userEmail} • <span style={{ color: 'var(--primary)' }}>{user.user_metadata.team_name || 'General'}</span>
+            </p>
+          </button>
+          <button
+            onClick={() => supabase.auth.signOut()}
+            className="glass-card action-btn"
+            style={{ color: 'var(--accent)', fontSize: '0.85rem', fontWeight: 600, padding: '8px 14px' }}
+          >
+            <LogOut size={14} /> Sign Out
+          </button>
+          <span style={{ color: 'var(--glass-border)', fontSize: '1.2rem' }}>|</span>
           <button
             onClick={() => setShowSidebar(v => !v)}
             className="glass-card action-btn hamburger-btn"

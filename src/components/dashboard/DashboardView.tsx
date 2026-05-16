@@ -1,17 +1,14 @@
 import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { AlertCircle, Clock, CheckCircle2, TrendingUp, Trash2, RotateCcw, Flame, X } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { AlertCircle, Clock, CheckCircle2, TrendingUp, Flame } from 'lucide-react'
 import { type Task } from '../../supabase'
 import { taskService } from '../../services/taskService'
-import { toast } from 'sonner'
-import { ConfirmModal } from '../ui/ConfirmModal'
 import { formatDate } from '../../utils/dateUtils'
 
 interface DashboardViewProps {
   session: any
   viewMode: 'personal' | 'team'
   onNavigateToTasks: () => void
-  onUpdate: () => void
 }
 
 function StatCard({ icon, label, value, color, onClick }: { icon: React.ReactNode; label: string; value: number; color: string; onClick?: () => void }) {
@@ -59,14 +56,10 @@ function TaskRow({ task, action }: { task: Task; action?: React.ReactNode }) {
   )
 }
 
-export function DashboardView({ session, viewMode, onNavigateToTasks, onUpdate }: DashboardViewProps) {
+export function DashboardView({ session, viewMode, onNavigateToTasks }: DashboardViewProps) {
   const [overdue, setOverdue] = useState<Task[]>([])
   const [dueToday, setDueToday] = useState<Task[]>([])
   const [stats, setStats] = useState({ total: 0, completed: 0, pending: 0, inProgress: 0, blocked: 0 })
-  const [deletedTasks, setDeletedTasks] = useState<Task[]>([])
-  const [showTrash, setShowTrash] = useState(false)
-  const [hardDeleteTarget, setHardDeleteTarget] = useState<Task | null>(null)
-  const [loadingTrash, setLoadingTrash] = useState(false)
 
   const loadData = async () => {
     if (!session) return
@@ -99,28 +92,7 @@ export function DashboardView({ session, viewMode, onNavigateToTasks, onUpdate }
     }
   }
 
-  const loadTrash = async () => {
-    setLoadingTrash(true)
-    const { data } = await taskService.fetchDeletedTasks(session, viewMode)
-    setDeletedTasks((data as Task[]) || [])
-    setLoadingTrash(false)
-  }
-
   useEffect(() => { loadData() }, [session, viewMode])
-
-  const handleRestore = async (task: Task) => {
-    await taskService.restoreTask(task.id)
-    toast.success(`"${task.title}" restored`)
-    loadTrash(); loadData(); onUpdate()
-  }
-
-  const handleHardDelete = async () => {
-    if (!hardDeleteTarget) return
-    await taskService.hardDeleteTask(hardDeleteTarget.id)
-    setHardDeleteTarget(null)
-    toast.success('Permanently deleted')
-    loadTrash()
-  }
 
   const completionRate = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0
 
@@ -193,63 +165,6 @@ export function DashboardView({ session, viewMode, onNavigateToTasks, onUpdate }
         </div>
       )}
 
-      {/* Trash Bin */}
-      <div className="glass-card" style={{ padding: '24px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-          <Trash2 size={16} color="var(--text-muted)" />
-          <h3 style={{ fontSize: '1rem', fontWeight: 600 }}>Trash Bin</h3>
-          <span style={{ marginLeft: 'auto' }}>
-            <button
-              onClick={() => { setShowTrash(v => !v); if (!showTrash) loadTrash() }}
-              style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--text-muted)', fontSize: '0.8rem', padding: '4px 12px', borderRadius: '8px' }}
-            >
-              {showTrash ? 'Hide' : 'Show Trash'}
-            </button>
-          </span>
-        </div>
-        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '12px' }}>Deleted tasks are held for 30 days before permanent removal.</p>
-
-        <AnimatePresence>
-          {showTrash && (
-            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
-              {loadingTrash ? (
-                <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Loading...</p>
-              ) : deletedTasks.length === 0 ? (
-                <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Trash is empty.</p>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {deletedTasks.map(task => (
-                    <div key={task.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 12px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--glass-border)' }}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ fontSize: '0.88rem', fontWeight: 600, opacity: 0.6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{task.title}</p>
-                        <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                          Deleted {new Date(task.deleted_at!).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <button onClick={() => handleRestore(task)} title="Restore" style={{ background: 'rgba(16,185,129,0.1)', color: '#10b981', padding: '5px 10px', borderRadius: '8px', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <RotateCcw size={12} /> Restore
-                      </button>
-                      <button onClick={() => setHardDeleteTarget(task)} title="Delete Forever" style={{ background: 'rgba(244,63,94,0.1)', color: '#f43f5e', padding: '5px 8px', borderRadius: '8px' }}>
-                        <X size={13} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {hardDeleteTarget && (
-        <ConfirmModal
-          title="Permanently Delete"
-          message={`This will permanently erase "${hardDeleteTarget.title}". This cannot be undone.`}
-          confirmText="Delete Forever"
-          onConfirm={handleHardDelete}
-          onCancel={() => setHardDeleteTarget(null)}
-        />
-      )}
     </div>
   )
 }

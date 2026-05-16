@@ -11,7 +11,6 @@ export function DashboardPage() {
       session={session}
       viewMode={viewMode}
       onNavigateToTasks={() => navigate('/tasks')}
-      onUpdate={() => {}}
     />
   )
 }
