@@ -119,27 +119,27 @@ export function Auth() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       {/* Top navbar */}
-      <nav style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 28px', borderBottom: '1px solid var(--glass-border)', background: 'var(--card-bg)', backdropFilter: 'blur(12px)' }}>
+      <nav style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 28px', borderBottom: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}>
         <h1 className="gradient-text" style={{ fontSize: '1.4rem', fontWeight: 700 }}>TaskTracker</h1>
         <div style={{ display: 'flex', gap: '8px' }}>
           <button
             onClick={() => setView('signin')}
             title="Sign In"
-            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', borderRadius: '10px', background: view === 'signin' ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.04)', color: view === 'signin' ? 'var(--primary)' : 'var(--text-muted)', border: '1px solid var(--glass-border)', fontSize: '0.82rem', fontWeight: 600 }}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', borderRadius: '10px', background: view === 'signin' ? 'rgba(99,102,241,0.25)' : 'rgba(255,255,255,0.08)', color: view === 'signin' ? '#a5b4fc' : '#94a3b8', border: `1px solid ${view === 'signin' ? 'rgba(99,102,241,0.4)' : 'rgba(255,255,255,0.12)'}`, fontSize: '0.82rem', fontWeight: 600 }}
           >
             <LogIn size={15} /> Sign In
           </button>
           <button
             onClick={() => setView('signup')}
             title="Create account"
-            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', borderRadius: '10px', background: view === 'signup' ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.04)', color: view === 'signup' ? 'var(--primary)' : 'var(--text-muted)', border: '1px solid var(--glass-border)', fontSize: '0.82rem', fontWeight: 600 }}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', borderRadius: '10px', background: view === 'signup' ? 'rgba(99,102,241,0.25)' : 'rgba(255,255,255,0.08)', color: view === 'signup' ? '#a5b4fc' : '#94a3b8', border: `1px solid ${view === 'signup' ? 'rgba(99,102,241,0.4)' : 'rgba(255,255,255,0.12)'}`, fontSize: '0.82rem', fontWeight: 600 }}
           >
             <User size={15} /> Register
           </button>
           <button
             onClick={clearForm}
             title="Clear form"
-            style={{ display: 'flex', alignItems: 'center', padding: '8px 10px', borderRadius: '10px', background: 'rgba(255,255,255,0.04)', color: 'var(--text-muted)', border: '1px solid var(--glass-border)' }}
+            style={{ display: 'flex', alignItems: 'center', padding: '8px 10px', borderRadius: '10px', background: 'rgba(255,255,255,0.08)', color: '#94a3b8', border: '1px solid rgba(255,255,255,0.12)' }}
           >
             <Trash2 size={15} />
           </button>

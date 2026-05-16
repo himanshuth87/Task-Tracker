@@ -266,30 +266,7 @@ export function AppLayout({ session }: { session: Session }) {
                 <NavLink
                   key={to}
                   to={to}
-                  style={({ isActive }) => ({
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    padding: '10px 14px',
-                    borderRadius: '10px',
-                    fontWeight: 600,
-                    fontSize: '0.9rem',
-                    background: isActive ? 'rgba(99,102,241,0.15)' : 'transparent',
-                    color: isActive ? 'var(--primary)' : 'var(--text-muted)',
-                    border: isActive ? '1px solid rgba(99,102,241,0.25)' : '1px solid transparent',
-                    transition: 'all 0.2s',
-                    textDecoration: 'none',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                  })}
-                  onMouseEnter={e => {
-                    const el = e.currentTarget as HTMLAnchorElement
-                    if (!el.getAttribute('aria-current')) el.style.background = 'var(--glass-bg)'
-                  }}
-                  onMouseLeave={e => {
-                    const el = e.currentTarget as HTMLAnchorElement
-                    if (!el.getAttribute('aria-current')) el.style.background = 'transparent'
-                  }}
+                  className={({ isActive }) => `sidebar-nav-link${isActive ? ' active' : ''}`}
                 >
                   <span style={{ flexShrink: 0 }}>{icon}</span>
                   {!sidebarCollapsed && <span>{label}</span>}
