@@ -9,7 +9,6 @@ import { AppLayout } from './components/layout/AppLayout'
 import { DashboardPage } from './pages/DashboardPage'
 import { TasksPage } from './pages/TasksPage'
 import { AnalyticsPage } from './pages/AnalyticsPage'
-import { PipelinePage } from './pages/PipelinePage'
 import { SettingsPage } from './pages/SettingsPage'
 
 function App() {
@@ -38,7 +37,6 @@ function App() {
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="tasks" element={<TasksPage />} />
           <Route path="analytics" element={<AnalyticsPage />} />
-          <Route path="pipeline" element={<PipelinePage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Route>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Bell, CheckCheck, Trash2, Briefcase, MessageCircle, GitBranch, AtSign, Info } from 'lucide-react'
+import { Bell, CheckCheck, Trash2, Briefcase, MessageCircle, AtSign, Info } from 'lucide-react'
 import { type AppNotification } from '../../supabase'
 import { notificationService } from '../../services/notificationService'
 
@@ -11,7 +11,6 @@ interface NotificationInboxProps {
 const TYPE_ICON: Record<string, React.ReactNode> = {
   task: <Briefcase size={14} color="#6366f1" />,
   comment: <MessageCircle size={14} color="#a855f7" />,
-  pipeline: <GitBranch size={14} color="#f59e0b" />,
   mention: <AtSign size={14} color="#3b82f6" />,
   info: <Info size={14} color="#94a3b8" />,
 }

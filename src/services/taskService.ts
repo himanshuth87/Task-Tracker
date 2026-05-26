@@ -46,6 +46,11 @@ export const taskService = {
       query = query.eq('team_name', teamName)
     }
 
+    const STATUS_FILTERS = ['pending', 'in_progress', 'blocked', 'completed']
+    if (STATUS_FILTERS.includes(filter)) {
+      query = query.eq('status', filter)
+    }
+
     if (searchTerm) {
       query = query.or(`title.ilike.%${searchTerm}%,remarks.ilike.%${searchTerm}%,task_giver.ilike.%${searchTerm}%,assigned_to_email.ilike.%${searchTerm}%,tags.cs.{${searchTerm.toLowerCase()}}`)
     }
@@ -73,6 +78,11 @@ export const taskService = {
     } else if (viewMode === 'team') {
       const teamName = session.user.user_metadata.team_name || 'General'
       query = query.eq('team_name', teamName)
+    }
+
+    const STATUS_FILTERS = ['pending', 'in_progress', 'blocked', 'completed']
+    if (STATUS_FILTERS.includes(filter)) {
+      query = query.eq('status', filter)
     }
 
     if (searchTerm) {
@@ -134,11 +144,14 @@ export const taskService = {
             deadline: shiftDate(task.deadline, days),
             remarks: task.remarks,
             priority: task.priority,
+            category: task.category,
+            tags: task.tags,
             status: 'pending',
             user_id: task.user_id,
             user_email: task.user_email,
             team_name: task.team_name,
             recurrence: task.recurrence,
+            position: 0,
           }])
         }
       }

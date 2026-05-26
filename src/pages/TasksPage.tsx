@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useOutletContext, useLocation } from 'react-router-dom'
 import {
   Plus, Search, List, LayoutGrid, BarChart2, AlertCircle,
@@ -50,10 +50,7 @@ export function TasksPage() {
     return () => clearTimeout(h)
   }, [searchTerm])
 
-  useEffect(() => {
-    document.body.classList.toggle('modal-open', showForm)
-    return () => document.body.classList.remove('modal-open')
-  }, [showForm])
+  const fetchTasksRef = useRef<(resetPage?: boolean) => Promise<void>>(async () => {})
 
   const fetchTasks = useCallback(async (resetPage = false) => {
     if (!session) return
@@ -94,10 +91,12 @@ export function TasksPage() {
     if (session) fetchTasks(true)
   }, [session, viewMode, filter, debouncedSearch])
 
+  useEffect(() => { fetchTasksRef.current = fetchTasks }, [fetchTasks])
+
   useEffect(() => {
     if (!session) return
     const channel = taskService.subscribeToTasks((payload: any) => {
-      fetchTasks(true)
+      fetchTasksRef.current(true)
       if (payload.eventType === 'INSERT' && payload.new.assigned_to_email === session.user.email) {
         setUnreadCount(prev => prev + 1)
         if ('Notification' in window && Notification.permission === 'granted') {
@@ -111,9 +110,7 @@ export function TasksPage() {
     return () => { channel.unsubscribe() }
   }, [session])
 
-  const filteredTasks = allTasks.filter(t =>
-    filter === 'all' || filter === 'assigned_to_me' || t.status === filter
-  )
+  const filteredTasks = allTasks
 
   const stats = {
     total: totalCount,

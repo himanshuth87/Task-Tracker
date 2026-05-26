@@ -242,13 +242,6 @@
   }
 }
 
-/* ── Pipeline stats — responsive grid ────────────────────────────── */
-.pipeline-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: var(--space-3);
-}
-
 /* Notification dot badge */
 .notification-dot {
   position: absolute;
