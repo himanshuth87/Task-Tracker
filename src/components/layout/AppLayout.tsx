@@ -180,64 +180,68 @@ export function AppLayout({ session }: { session: Session }) {
           {/* User info */}
           <button
             onClick={() => navigate('/settings')}
-            style={{ display: 'flex', alignItems: 'center', gap: '10px', textAlign: 'left', background: 'transparent', padding: '6px 12px', borderRadius: '12px' }}
+            style={{ display: 'flex', alignItems: 'center', gap: '12px', textAlign: 'left', background: 'var(--glass-bg)', padding: '6px 16px 6px 6px', borderRadius: '40px', border: '1px solid var(--glass-border)' }}
             className="hover-bg-glass"
           >
-            <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'linear-gradient(135deg, var(--primary), #a855f7)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: '0.9rem', flexShrink: 0, boxShadow: '0 4px 12px rgba(99,102,241,0.3)' }}>
+            <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'linear-gradient(135deg, var(--primary), var(--secondary))', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: '0.9rem', flexShrink: 0, boxShadow: '0 0 10px var(--primary-glow)' }}>
               {initials}
             </div>
-            <div>
-              <p style={{ color: 'var(--text-main)', fontSize: '0.95rem', fontWeight: 600, lineHeight: 1.2 }}>{fullName}</p>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '3px' }}>
-                {userEmail} <span style={{ opacity: 0.5 }}>•</span> <span style={{ color: 'var(--primary)', fontWeight: 500 }}>{user.user_metadata.team_name || 'General'}</span>
+            <div style={{ display: 'flex', flexDirection: 'column', paddingRight: '4px' }}>
+              <p style={{ color: 'var(--text-main)', fontSize: '0.9rem', fontWeight: 600, lineHeight: 1.2 }}>{fullName}</p>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '2px' }}>
+                {user.user_metadata.team_name || 'General Team'}
               </p>
             </div>
           </button>
 
           <div style={{ width: '1px', height: '32px', background: 'var(--glass-border)', margin: '0 4px' }} />
 
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', background: 'var(--glass-bg)', padding: '6px', borderRadius: '24px', border: '1px solid var(--glass-border)' }}>
             {/* Notification bell */}
-          <div style={{ position: 'relative' }}>
-            <button
-              onClick={() => { setShowTrash(false); setShowNotifications(v => !v) }}
-              className="glass-card action-btn"
-              title="Notifications"
-            >
-              <Bell size={20} color={unreadCount > 0 ? 'var(--primary)' : 'var(--text-muted)'} />
-              {unreadCount > 0 && <span className="notification-dot">{unreadCount}</span>}
-            </button>
-            <AnimatePresence>
-              {showNotifications && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                  className="glass-card notification-dropdown"
-                >
-                  <NotificationInbox userEmail={userEmail} onUnreadChange={setUnreadCount} />
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+            <div style={{ position: 'relative' }}>
+              <button
+                onClick={() => { setShowTrash(false); setShowNotifications(v => !v) }}
+                className="action-btn icon-only"
+                title="Notifications"
+                style={{ padding: '8px', borderRadius: '50%', background: 'transparent', border: 'none' }}
+              >
+                <Bell size={18} color={unreadCount > 0 ? 'var(--primary)' : 'var(--text-main)'} />
+                {unreadCount > 0 && <span className="notification-dot">{unreadCount}</span>}
+              </button>
+              <AnimatePresence>
+                {showNotifications && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    className="glass-card notification-dropdown"
+                  >
+                    <NotificationInbox userEmail={userEmail} onUnreadChange={setUnreadCount} />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            <div style={{ width: '1px', height: '20px', background: 'var(--glass-border)', margin: '0 2px' }} />
 
             <button
               onClick={() => setIsLightMode(v => !v)}
-              className="glass-card action-btn"
-              title={isLightMode ? 'Dark mode' : 'Light mode'}
-              style={{ padding: '10px 14px', gap: '6px' }}
+              className="action-btn icon-only"
+              title={isLightMode ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+              style={{ padding: '8px', borderRadius: '50%', background: 'transparent', border: 'none' }}
             >
-              {isLightMode ? <Moon size={18} /> : <Sun size={18} />}
-              <span style={{ fontSize: '0.85rem' }}>{isLightMode ? 'Dark' : 'Light'}</span>
+              {isLightMode ? <Moon size={18} color="var(--text-main)" /> : <Sun size={18} color="var(--text-main)" />}
             </button>
+
+            <div style={{ width: '1px', height: '20px', background: 'var(--glass-border)', margin: '0 2px' }} />
 
             <button
               onClick={() => supabase.auth.signOut()}
-              className="glass-card action-btn"
-              style={{ color: 'var(--accent)', fontSize: '0.85rem', fontWeight: 600, padding: '10px 14px', marginLeft: '4px' }}
+              className="action-btn icon-only"
+              style={{ padding: '8px', borderRadius: '50%', background: 'transparent', border: 'none' }}
               title="Sign Out"
             >
-              <LogOut size={16} /> <span className="hide-on-mobile" style={{ fontSize: '0.85rem' }}>Sign Out</span>
+              <LogOut size={18} color="var(--accent)" />
             </button>
           </div>
           </div>
