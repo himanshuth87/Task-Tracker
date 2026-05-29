@@ -1,73 +1,65 @@
-# React + TypeScript + Vite
+# Task Tracker
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern, fast, and secure web application for team-based task management. Built with React, TypeScript, and Supabase.
 
-Currently, two official plugins are available:
+![Task Tracker Dashboard](public/favicon.svg) <!-- Replace with an actual screenshot of the app -->
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Features
 
-## React Compiler
+- **Team Management:** Create teams, invite members, and isolate data using strict Row-Level Security (RLS).
+- **Task Lifecycle:** Track tasks from `Pending` -> `In Progress` -> `Blocked` -> `Completed`.
+- **Daily Updates:** Assignees can easily post daily progress updates directly on their tasks.
+- **Advanced Task Details:** Support for Subtasks, File Attachments, and Task Dependencies.
+- **Analytics Dashboard:** Visualize team performance, completion rates, and workload distribution.
+- **Notifications & Reminders:** Automated email notifications for new assignments and upcoming deadlines via Supabase Edge Functions & Resend.
+- **Exporting:** Export task reports to Excel or add individual tasks directly to Outlook/Apple Calendar via `.ics` files.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Tech Stack
 
-## Expanding the ESLint configuration
+- **Frontend:** React 18, Vite, TypeScript
+- **Styling:** Vanilla CSS with custom glass-morphism UI, Framer Motion for animations
+- **Icons:** Lucide React
+- **Backend & Database:** Supabase (PostgreSQL)
+- **Authentication:** Supabase Auth (Email/Password)
+- **Email Delivery:** Resend API
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Getting Started
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### Prerequisites
+- Node.js (v22 or higher recommended)
+- A [Supabase](https://supabase.com/) account for the database backend
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### Installation
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/himanshuth87/Task-Tracker.git
+   cd Task-Tracker
+   ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+3. **Set up environment variables:**
+   Create a `.env` file in the root directory and add your Supabase credentials:
+   ```env
+   VITE_SUPABASE_URL=your_supabase_project_url
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+4. **Run the development server:**
+   ```bash
+   npm run dev
+   ```
+   Open `http://localhost:5173` in your browser.
+
+## Database Setup
+The application relies on Supabase for data storage. All SQL migrations, tables (tasks, profiles, task_comments, etc.), and Row Level Security (RLS) policies are located in the `supabase/migrations/` folder.
+
+## Deployment
+This project is configured to be deployed easily on platforms like Vercel, Netlify, or Render (see `render.yaml`). Ensure your environment variables are correctly set in your deployment environment.
+
+---
+*Built by [High Spirit Commercial Ventures Pvt. Ltd.](https://github.com/himanshuth87)*
