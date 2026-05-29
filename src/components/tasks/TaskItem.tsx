@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
-import { Calendar, Mail, Edit2, Trash2, Check, X, User, Clock, MessageCircle, ChevronDown, ChevronUp, AlertCircle, Loader2, CheckSquare, Paperclip, Link2, History, Square, Timer } from 'lucide-react'
+import { Calendar, Mail, Edit2, Trash2, Check, X, User, Clock, MessageCircle, ChevronDown, ChevronUp, AlertCircle, Loader2, CheckSquare, Paperclip, Link2, History, Square, Timer, Send } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { type Task, type TaskStatus, supabase } from '../../supabase'
 import { taskService } from '../../services/taskService'
+import { commentService } from '../../services/commentService'
 import { TaskComments } from './TaskComments'
 import { SubTaskList } from './SubTaskList'
 import { FileAttachments } from './FileAttachments'
@@ -45,6 +46,9 @@ export function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId, curre
   const [activePanel, setActivePanel] = useState<Panel>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [subtasksInfo, setSubtasksInfo] = useState({ total: 0, completed: 0 })
+  const [showDailyUpdate, setShowDailyUpdate] = useState(false)
+  const [dailyUpdateText, setDailyUpdateText] = useState('')
+  const [submittingUpdate, setSubmittingUpdate] = useState(false)
 
   useEffect(() => {
     const fetchSubtasks = async () => {
@@ -137,6 +141,21 @@ export function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId, curre
       toast.success(`Logged ${minutes > 0 ? '+' : ''}${minutes}m`)
       onUpdate()
     }
+  }
+
+  const submitDailyUpdate = async () => {
+    if (!dailyUpdateText.trim()) return
+    setSubmittingUpdate(true)
+    const { error } = await commentService.addComment(task.id, currentUserEmail, currentUserName, `[Daily Update]: ${dailyUpdateText.trim()}`)
+    if (!error) {
+      toast.success('Daily update posted!')
+      setDailyUpdateText('')
+      setShowDailyUpdate(false)
+      setActivePanel('comments') // Open comments panel to show the update
+    } else {
+      toast.error('Failed to post update')
+    }
+    setSubmittingUpdate(false)
   }
 
   const panelBtn = (icon: React.ReactNode, panel: Panel, label: string) => (
@@ -384,6 +403,44 @@ export function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId, curre
         </div>
       )}
 
+      {/* Daily Update Prompt for Assignee */}
+      {!isEditing && isAssignee && task.status !== 'completed' && (
+        <div style={{ marginTop: '4px' }}>
+          {!showDailyUpdate ? (
+            <button 
+              onClick={() => setShowDailyUpdate(true)}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: 'var(--primary)', background: 'rgba(99,102,241,0.1)', padding: '6px 12px', borderRadius: '10px', fontWeight: 600, border: '1px solid rgba(99,102,241,0.2)' }}
+            >
+              <MessageCircle size={14} /> Add Daily Update
+            </button>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
+              <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Send size={14} color="var(--primary)" /> Post Daily Progress Update
+              </span>
+              <textarea 
+                autoFocus
+                placeholder="What did you accomplish today?"
+                value={dailyUpdateText}
+                onChange={e => setDailyUpdateText(e.target.value)}
+                style={{ height: '60px', width: '100%', fontSize: '0.85rem' }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                <button onClick={() => setShowDailyUpdate(false)} style={{ fontSize: '0.8rem', color: 'var(--text-muted)', padding: '6px 12px' }}>Cancel</button>
+                <button 
+                  onClick={submitDailyUpdate} 
+                  disabled={submittingUpdate || !dailyUpdateText.trim()}
+                  className="primary-gradient action-btn" 
+                  style={{ padding: '6px 14px', fontSize: '0.8rem' }}
+                >
+                  {submittingUpdate ? <Loader2 size={14} className="animate-spin" /> : 'Post Update'}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Panel toggle bar */}
       {!isEditing && (
         <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', paddingTop: '4px', borderTop: '1px solid var(--glass-border)' }}>
@@ -428,3 +485,4 @@ export function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId, curre
     </motion.div>
   )
 }
+
