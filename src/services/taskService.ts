@@ -39,7 +39,7 @@ export const taskService = {
       if (filter === 'assigned_to_me') {
         query = query.eq('assigned_to_email', session.user.email)
       } else {
-        query = query.eq('user_id', session.user.id)
+        query = query.or(`user_id.eq.${session.user.id},assigned_to_email.eq.${session.user.email}`)
       }
     } else if (viewMode === 'team') {
       const teamName = session.user.user_metadata.team_name || 'General'
@@ -73,7 +73,7 @@ export const taskService = {
       if (filter === 'assigned_to_me') {
         query = query.eq('assigned_to_email', session.user.email)
       } else {
-        query = query.eq('user_id', session.user.id)
+        query = query.or(`user_id.eq.${session.user.id},assigned_to_email.eq.${session.user.email}`)
       }
     } else if (viewMode === 'team') {
       const teamName = session.user.user_metadata.team_name || 'General'
