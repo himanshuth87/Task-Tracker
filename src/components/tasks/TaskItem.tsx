@@ -99,6 +99,7 @@ export function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId, curre
       remarks: editedTask.remarks,
       tags: editedTask.tags,
       time_logged_minutes: editedTask.time_logged_minutes,
+      assigned_to_email: editedTask.assigned_to_email || null,
     }, currentUserEmail, currentUserName)
     if (!error) {
       toast.success('Task updated')
@@ -324,6 +325,7 @@ export function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId, curre
         {isEditing ? (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', width: '100%' }}>
             <input placeholder="Assigned by" value={editedTask.task_giver} onChange={e => setEditedTask({ ...editedTask, task_giver: e.target.value })} />
+            <input placeholder="Assigned to (email)" value={editedTask.assigned_to_email || ''} onChange={e => setEditedTask({ ...editedTask, assigned_to_email: e.target.value })} />
             <select value={editedTask.priority} onChange={e => setEditedTask({ ...editedTask, priority: e.target.value as any })}>
               <option value="low">Low</option>
               <option value="medium">Medium</option>
