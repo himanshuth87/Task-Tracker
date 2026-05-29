@@ -235,18 +235,11 @@ export function AppLayout({ session }: { session: Session }) {
               onClick={() => supabase.auth.signOut()}
               className="glass-card action-btn"
               style={{ color: 'var(--accent)', fontSize: '0.85rem', fontWeight: 600, padding: '10px 14px', marginLeft: '4px' }}
-            >
-              <LogOut size={16} /> <span style={{ fontSize: '0.85rem' }}>Sign Out</span>
-            </button>
-            
-            <button
-              onClick={() => supabase.auth.signOut()}
-              className="glass-card action-btn"
-              style={{ color: 'var(--accent)', fontSize: '0.85rem', fontWeight: 600, padding: '10px 14px', marginLeft: '4px' }}
               title="Sign Out"
             >
               <LogOut size={16} /> <span className="hide-on-mobile" style={{ fontSize: '0.85rem' }}>Sign Out</span>
             </button>
+          </div>
           </div>
         </header>
 
