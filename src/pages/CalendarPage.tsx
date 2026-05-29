@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronLeft, ChevronRight, X, Calendar as CalendarIcon, Filter, Layers } from 'lucide-react'
+import { ChevronLeft, ChevronRight, X, Calendar as CalendarIcon, Layers } from 'lucide-react'
 import { type AppContext } from '../components/layout/AppLayout'
 import { taskService } from '../services/taskService'
 import { type Task } from '../supabase'
@@ -16,17 +16,14 @@ export function CalendarPage() {
   
   const [currentDate, setCurrentDate] = useState(new Date())
   const [tasks, setTasks] = useState<Task[]>([])
-  const [loading, setLoading] = useState(true)
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
 
   const year = currentDate.getFullYear()
   const month = currentDate.getMonth()
 
   const loadTasks = async () => {
-    setLoading(true)
     const { data } = await taskService.fetchAllTasks(session, viewMode, 'all')
     setTasks((data as Task[]) || [])
-    setLoading(false)
   }
 
   useEffect(() => {
@@ -160,7 +157,7 @@ export function CalendarPage() {
                 
                 {dayTasks.length > 0 && (
                   <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '4px', width: '100%' }}>
-                    {dayTasks.slice(0, 3).map((t, i) => (
+                    {dayTasks.slice(0, 3).map((t) => (
                       <div key={t.id} style={{ 
                         fontSize: '0.7rem', 
                         padding: '2px 6px', 
@@ -238,7 +235,10 @@ export function CalendarPage() {
                       key={task.id} 
                       task={task} 
                       onUpdate={loadTasks}
-                      onDelete={loadTasks}
+                      onAddToCalendar={() => {}}
+                      currentUserId={session.user.id}
+                      currentUserEmail={session.user.email || ''}
+                      currentUserName={session.user.user_metadata?.full_name || ''}
                     />
                   ))
                 )}
