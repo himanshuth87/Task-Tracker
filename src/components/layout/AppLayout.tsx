@@ -97,7 +97,6 @@ export function AppLayout({ session }: { session: Session }) {
   const user = session.user
   const fullName = user.user_metadata.full_name || 'User'
   const userEmail = user.email || ''
-  const isTasksRoute = location.pathname === '/tasks'
 
   const context: AppContext = { session, viewMode, setViewMode, setUnreadCount }
 
