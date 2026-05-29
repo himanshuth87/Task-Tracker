@@ -151,6 +151,11 @@ input, select, textarea {
   transition: border-color 0.2s, background 0.2s, color 0.2s;
 }
 
+option {
+  background: var(--card-bg);
+  color: var(--text-main);
+}
+
 input:focus, select:focus, textarea:focus {
   border-color: var(--primary);
   outline: none;
