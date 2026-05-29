@@ -3,7 +3,7 @@ import { useOutletContext, useLocation, useNavigate } from 'react-router-dom'
 import {
   Plus, Search, List, LayoutGrid, BarChart2, AlertCircle,
   Bell, Users, Briefcase, UserCheck, Download,
-  BarChart3, TrendingUp,
+  BarChart3, TrendingUp, ClipboardList,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { TaskItem } from '../components/tasks/TaskItem'
@@ -311,7 +311,8 @@ export function TasksPage() {
           {[0, 1, 2, 3].map(i => <div key={i} className="skeleton-card" style={{ animationDelay: `${i * 0.1}s` }} />)}
         </div>
       ) : filteredTasks.length === 0 ? (
-        <div className="glass-card" style={{ padding: '80px 40px', textAlign: 'center' }}>
+        <div className="glass-card" style={{ padding: '80px 40px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <ClipboardList size={48} color="var(--glass-border)" style={{ marginBottom: '16px', opacity: 0.5 }} />
           <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>
             {searchTerm ? `No tasks match "${searchTerm}"` : 'No tasks found.'}
           </p>

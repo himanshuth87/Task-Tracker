@@ -238,15 +238,6 @@ export function AppLayout({ session }: { session: Session }) {
             {isLightMode ? <Moon size={18} /> : <Sun size={18} />}
             <span style={{ fontSize: '0.85rem' }}>{isLightMode ? 'Dark' : 'Light'}</span>
           </button>
-
-          {isTasksRoute && (
-            <button
-              onClick={() => navigate('/tasks', { state: { openForm: true } })}
-              className="primary-gradient action-btn main-action"
-            >
-              + New Task
-            </button>
-          )}
         </div>
       </header>
 
