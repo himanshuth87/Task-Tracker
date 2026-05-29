@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { Resend } from "npm:resend"
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3"
+import { Buffer } from "node:buffer"
 
 const resend = new Resend(Deno.env.get('RESEND_API_KEY'))
 const fromEmail = Deno.env.get('RESEND_FROM_EMAIL') || 'noreply@hscvpl.in'
@@ -47,10 +49,38 @@ serve(async (req) => {
     const pColor = priorityColor[priority] || '#6b7280'
     const pLabel = priorityLabel[priority] || priority
 
+    // Fetch attachments if any
+    let emailAttachments: any[] = []
+    if (body.attachments && Array.isArray(body.attachments) && body.attachments.length > 0) {
+      const supabase = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      )
+      
+      for (const att of body.attachments) {
+        if (!att.file_path || !att.file_name) continue
+        const { data: fileData, error: downloadError } = await supabase.storage
+          .from('task-attachments')
+          .download(att.file_path)
+          
+        if (fileData) {
+          const arrayBuffer = await fileData.arrayBuffer()
+          const buffer = Buffer.from(arrayBuffer)
+          emailAttachments.push({
+            filename: att.file_name,
+            content: buffer
+          })
+        } else {
+          console.error('Failed to download attachment for email:', downloadError)
+        }
+      }
+    }
+
     const { data, error } = await resend.emails.send({
       from: `${giver} via TaskTracker <${fromEmail}>`,
       to: [task.assigned_to_email],
       subject: `${giver} assigned you a task: ${task.title}`,
+      attachments: emailAttachments.length > 0 ? emailAttachments : undefined,
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 580px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
 

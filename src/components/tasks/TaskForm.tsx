@@ -136,6 +136,7 @@ export function TaskForm({ onTaskAdded, onCancel, userId, userEmail, fullName, t
     }
 
     // Flush draft files
+    let uploadedAttachments: any[] = []
     if (draftFiles.length > 0) {
       const uploadResults = await Promise.all(
         draftFiles.map(f => attachmentService.uploadFile(taskId, f, userEmail || ''))
@@ -144,6 +145,14 @@ export function TaskForm({ onTaskAdded, onCancel, userId, userEmail, fullName, t
       if (failed > 0) {
         toast.warning(`Task created, but ${failed} file(s) failed to upload. Ensure the "task-attachments" storage bucket exists in Supabase.`)
       }
+      uploadedAttachments = uploadResults.map(r => r.data).filter(Boolean)
+    }
+
+    // Trigger email notification manually after files are uploaded
+    if (newTask.assigned_to_email && newTask.assigned_to_email !== newTask.user_email) {
+      supabase.functions.invoke('notify-assignee', { 
+        body: { record: newTask, attachments: uploadedAttachments } 
+      }).catch(console.error)
     }
 
     const extras = []

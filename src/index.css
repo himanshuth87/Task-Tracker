@@ -160,6 +160,7 @@ input:focus, select:focus, textarea:focus {
   border-color: var(--primary);
   outline: none;
   background: rgba(128, 128, 128, 0.08);
+  box-shadow: 0 0 0 3px var(--primary-glow);
 }
 
 /* Skeleton loader shimmer */

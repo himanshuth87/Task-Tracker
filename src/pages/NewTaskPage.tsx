@@ -11,7 +11,7 @@ export function NewTaskPage() {
   const userEmail = user.email || ''
 
   return (
-    <div style={{ padding: '24px', maxWidth: '800px', margin: '0 auto', height: '100%' }}>
+    <div style={{ padding: '24px', maxWidth: '680px', margin: '0 auto', height: '100%' }}>
       <div style={{ marginBottom: '24px' }}>
         <h2 style={{ fontSize: '1.4rem', fontWeight: 700, margin: 0 }} className="gradient-text">Create New Task</h2>
         <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: '2px 0 0 0' }}>Assign a task to yourself or a team member.</p>

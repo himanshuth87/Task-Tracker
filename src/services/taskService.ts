@@ -103,7 +103,7 @@ export const taskService = {
 
     if (!result.error && result.data) {
       if (sanitized.assigned_to_email && sanitized.assigned_to_email !== sanitized.user_email) {
-        supabase.functions.invoke('notify-assignee', { body: result.data }).catch(console.error)
+        // Notification logic moved to TaskForm to support attachments
         void supabase.from('notifications').insert([{
           user_email: sanitized.assigned_to_email,
           title: 'New Task Assigned',
