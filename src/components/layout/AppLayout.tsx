@@ -97,6 +97,7 @@ export function AppLayout({ session }: { session: Session }) {
   const user = session.user
   const fullName = user.user_metadata.full_name || 'User'
   const userEmail = user.email || ''
+  const initials = fullName.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase() || 'U'
 
   const context: AppContext = { session, viewMode, setViewMode, setUnreadCount }
 
@@ -112,34 +113,27 @@ export function AppLayout({ session }: { session: Session }) {
         </div>
 
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          {/* User info + sign out */}
+          {/* User info */}
           <button
             onClick={() => navigate('/settings')}
-            style={{ textAlign: 'left', background: 'transparent', padding: '4px 8px', borderRadius: '8px' }}
+            style={{ display: 'flex', alignItems: 'center', gap: '10px', textAlign: 'left', background: 'transparent', padding: '6px 12px', borderRadius: '12px' }}
             className="hover-bg-glass"
           >
-            <p style={{ color: 'var(--text-main)', fontSize: '0.95rem', fontWeight: 600 }}>{fullName}</p>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
-              {userEmail} • <span style={{ color: 'var(--primary)' }}>{user.user_metadata.team_name || 'General'}</span>
-            </p>
-          </button>
-          <button
-            onClick={() => supabase.auth.signOut()}
-            className="glass-card action-btn"
-            style={{ color: 'var(--accent)', fontSize: '0.85rem', fontWeight: 600, padding: '8px 14px' }}
-          >
-            <LogOut size={14} /> Sign Out
-          </button>
-          <span style={{ color: 'var(--glass-border)', fontSize: '1.2rem' }}>|</span>
-          <button
-            onClick={() => setShowSidebar(v => !v)}
-            className="glass-card action-btn hamburger-btn"
-            aria-label="Toggle menu"
-          >
-            {showSidebar ? <X size={20} /> : <Menu size={20} />}
+            <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'linear-gradient(135deg, var(--primary), #a855f7)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: '0.9rem', flexShrink: 0, boxShadow: '0 4px 12px rgba(99,102,241,0.3)' }}>
+              {initials}
+            </div>
+            <div>
+              <p style={{ color: 'var(--text-main)', fontSize: '0.95rem', fontWeight: 600, lineHeight: 1.2 }}>{fullName}</p>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '3px' }}>
+                {userEmail} <span style={{ opacity: 0.5 }}>•</span> <span style={{ color: 'var(--primary)', fontWeight: 500 }}>{user.user_metadata.team_name || 'General'}</span>
+              </p>
+            </div>
           </button>
 
-          {/* Notification bell */}
+          <div style={{ width: '1px', height: '32px', background: 'var(--glass-border)', margin: '0 4px' }} />
+
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            {/* Notification bell */}
           <div style={{ position: 'relative' }}>
             <button
               onClick={() => { setShowTrash(false); setShowNotifications(v => !v) }}
@@ -228,15 +222,33 @@ export function AppLayout({ session }: { session: Session }) {
             </AnimatePresence>
           </div>
 
-          <button
-            onClick={() => setIsLightMode(v => !v)}
-            className="glass-card action-btn"
-            title={isLightMode ? 'Dark mode' : 'Light mode'}
-            style={{ padding: '10px 14px', gap: '6px' }}
-          >
-            {isLightMode ? <Moon size={18} /> : <Sun size={18} />}
-            <span style={{ fontSize: '0.85rem' }}>{isLightMode ? 'Dark' : 'Light'}</span>
-          </button>
+            <button
+              onClick={() => setIsLightMode(v => !v)}
+              className="glass-card action-btn"
+              title={isLightMode ? 'Dark mode' : 'Light mode'}
+              style={{ padding: '10px 14px', gap: '6px' }}
+            >
+              {isLightMode ? <Moon size={18} /> : <Sun size={18} />}
+              <span style={{ fontSize: '0.85rem' }}>{isLightMode ? 'Dark' : 'Light'}</span>
+            </button>
+
+            <button
+              onClick={() => supabase.auth.signOut()}
+              className="glass-card action-btn"
+              style={{ color: 'var(--accent)', fontSize: '0.85rem', fontWeight: 600, padding: '10px 14px', marginLeft: '4px' }}
+            >
+              <LogOut size={16} /> <span style={{ fontSize: '0.85rem' }}>Sign Out</span>
+            </button>
+            
+            <button
+              onClick={() => setShowSidebar(v => !v)}
+              className="glass-card action-btn hamburger-btn"
+              aria-label="Toggle menu"
+              style={{ marginLeft: '4px' }}
+            >
+              {showSidebar ? <X size={20} /> : <Menu size={20} />}
+            </button>
+          </div>
         </div>
       </header>
 
