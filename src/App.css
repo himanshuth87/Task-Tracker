@@ -1,46 +1,116 @@
 /* App specific styles */
-.app-container {
-  max-width: 100%;
-  width: 100%;
-  padding: 32px 40px;
+.app-layout {
+  display: flex;
   min-height: 100vh;
-  box-sizing: border-box;
+  width: 100%;
 }
 
-.header {
+/* ── Fixed Sidebar ─────────────────────────────── */
+.fixed-sidebar {
+  width: 260px;
+  background: var(--glass-bg);
+  border-right: 1px solid var(--glass-border);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 100;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow-y: hidden;
+}
+
+.fixed-sidebar.collapsed {
+  width: 80px;
+}
+
+.sidebar-header {
+  padding: 24px 20px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="light"] .sidebar-header {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.sidebar-footer {
+  padding: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="light"] .sidebar-footer {
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.collapse-btn {
+  width: 100%;
+  background: rgba(128, 128, 128, 0.05);
+  color: var(--text-muted);
+  border-radius: 12px;
+  padding: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--glass-border);
+}
+
+.collapse-btn:hover {
+  background: rgba(128, 128, 128, 0.1);
+  color: var(--text-main);
+}
+
+/* ── Main Content Area ─────────────────────────── */
+.main-content-area {
+  flex: 1;
+  margin-left: 260px;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  width: calc(100% - 260px);
+}
+
+.main-content-area.collapsed {
+  margin-left: 80px;
+  width: calc(100% - 80px);
+}
+
+.top-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 48px;
+  align-items: center;
+  padding: 16px 40px;
+  height: 80px;
+  position: sticky;
+  top: 0;
+  z-index: 90;
+  background: var(--body-bg);
+  backdrop-filter: blur(10px);
 }
 
-.task-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 32px;
+.main-content-inner {
+  padding: 16px 40px 40px;
+  flex: 1;
 }
 
-@media (min-width: 992px) {
-  .task-grid {
-    grid-template-columns: 260px 1fr;
-    transition: grid-template-columns 0.3s ease;
-    align-items: start;
-  }
-  .task-grid.sidebar-collapsed {
-    grid-template-columns: 64px 1fr;
-  }
-  .task-grid.sidebar-collapsed .sidebar {
-    overflow: hidden;
-  }
-
-  /* Sidebar scrolls independently on desktop */
-  .sidebar {
-    position: sticky;
-    top: 24px;
-    max-height: calc(100vh - 48px);
-    overflow-y: auto;
-    overflow-x: hidden;
-  }
+.mobile-header-left {
+  display: none;
 }
 
 .action-btn {
@@ -200,47 +270,51 @@
     pointer-events: auto;
   }
 
-  /* Pull the sidebar out of the grid flow and make it a fixed drawer */
-  .sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 100%;
-    width: min(300px, 85vw);
-    z-index: 400;
-    overflow-y: auto;
-    padding: var(--space-6);
-    background: var(--card-bg);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-right: 1px solid var(--glass-border);
-    box-shadow: 4px 0 32px rgba(0, 0, 0, 0.5);
+  .fixed-sidebar {
     transform: translateX(-100%);
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    width: min(300px, 85vw);
   }
 
-  .sidebar.sidebar-open {
+  .fixed-sidebar.mobile-open {
     transform: translateX(0);
   }
+  
+  .main-content-area {
+    margin-left: 0;
+    width: 100%;
+  }
 
-  /* On mobile the grid is already 1 column; sidebar is out of flow */
-  .task-grid {
-    grid-template-columns: 1fr;
+  .main-content-area.collapsed {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .top-header {
+    padding: 16px 20px;
+  }
+
+  .main-content-inner {
+    padding: 16px 20px 40px;
+  }
+
+  .mobile-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .mobile-logo {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  .hide-on-mobile {
+    display: none;
   }
 }
 
-/* ── Responsive padding ─────────────────────────────── */
-@media (max-width: 767px) {
-  .app-container {
-    padding: 20px 16px;
-  }
-}
 
-@media (min-width: 768px) and (max-width: 991px) {
-  .app-container {
-    padding: 24px 24px;
-  }
-}
 
 /* Notification dot badge */
 .notification-dot {
@@ -265,22 +339,39 @@
 .sidebar-nav-link {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
-  border-radius: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   text-decoration: none;
   white-space: nowrap;
   overflow: hidden;
   border: 1px solid transparent;
   color: var(--text-muted);
   background: transparent;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  transition: all 0.15s;
+}
+
+.sidebar-nav-link .icon-container {
+  width: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+  margin-right: 12px;
+}
+
+.fixed-sidebar.collapsed .sidebar-nav-link {
+  padding: 12px;
+  justify-content: center;
+}
+
+.fixed-sidebar.collapsed .sidebar-nav-link .icon-container {
+  margin-right: 0;
 }
 
 .sidebar-nav-link:hover {
-  background: var(--glass-bg);
+  background: rgba(128, 128, 128, 0.08);
   color: var(--text-main);
 }
 
@@ -318,23 +409,7 @@
   background: rgba(0, 0, 0, 0.35);
 }
 
-/* ── Sidebar collapsed state (desktop only) ─────────────────────── */
-@media (min-width: 992px) {
-  .task-grid.sidebar-collapsed .sidebar .glass-card {
-    padding: 8px !important;
-  }
 
-  /* Center icons in collapsed nav buttons and links */
-  .task-grid.sidebar-collapsed .sidebar button,
-  .task-grid.sidebar-collapsed .sidebar a {
-    justify-content: center;
-    padding: 10px !important;
-  }
-
-  .task-grid.sidebar-collapsed .sidebar .collapse-btn {
-    padding: 8px !important;
-  }
-}
 
 /* ── Light theme component overrides ─────────────────────────────── */
 /* Variables live in index.css; only component-specific styles here  */

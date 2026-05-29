@@ -102,17 +102,81 @@ export function AppLayout({ session }: { session: Session }) {
   const context: AppContext = { session, viewMode, setViewMode, setUnreadCount }
 
   return (
-    <div className="app-container">
-      <header className="header">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <h1 className="gradient-text" style={{ fontSize: '2.5rem', fontWeight: 700 }}>TaskTracker</h1>
-          <div className="live-badge">
-            <Zap size={12} fill="#10b981" />
-            <span>LIVE</span>
-          </div>
+    <div className="app-layout">
+      {/* ── Fixed Sidebar ──────────────────────── */}
+      <aside className={`fixed-sidebar ${sidebarCollapsed ? 'collapsed' : ''} ${showSidebar ? 'mobile-open' : ''}`}>
+        <div className="sidebar-header">
+          {!sidebarCollapsed ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h1 className="gradient-text" style={{ fontSize: '1.6rem', fontWeight: 700, margin: 0 }}>TaskTracker</h1>
+              <div className="live-badge" style={{ padding: '2px 6px', fontSize: '0.6rem' }}>
+                <Zap size={10} fill="#10b981" />
+                <span>LIVE</span>
+              </div>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+              <h1 className="gradient-text" style={{ fontSize: '1.6rem', fontWeight: 800, margin: 0 }}>T</h1>
+            </div>
+          )}
         </div>
 
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+        <nav className="sidebar-nav">
+          {NAV_ITEMS.map(({ to, label, icon }) => (
+            <NavLink
+              key={to}
+              to={to}
+              onClick={() => setShowSidebar(false)}
+              className={({ isActive }) => `sidebar-nav-link ${isActive ? 'active' : ''}`}
+            >
+              <span className="icon-container">{icon}</span>
+              {!sidebarCollapsed && <span className="label">{label}</span>}
+            </NavLink>
+          ))}
+          <div style={{ height: '1px', background: 'var(--glass-border)', margin: '16px 0' }} />
+          <button
+            onClick={handleTrashToggle}
+            className={`sidebar-nav-link ${showTrash ? 'active' : ''}`}
+            style={{ width: '100%', textAlign: 'left' }}
+          >
+            <span className="icon-container"><Trash2 size={16} /></span>
+            {!sidebarCollapsed && <span className="label">Trash</span>}
+          </button>
+        </nav>
+
+        <div className="sidebar-footer">
+          <button
+            onClick={() => setSidebarCollapsed(v => !v)}
+            className="collapse-btn"
+            title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            {sidebarCollapsed ? <ChevronRight size={18} /> : <><ChevronLeft size={18} /><span style={{ marginLeft: '8px' }}>Collapse Menu</span></>}
+          </button>
+        </div>
+      </aside>
+
+      {/* Mobile overlay */}
+      <div
+        className={`sidebar-overlay ${showSidebar ? 'open' : ''}`}
+        onClick={() => setShowSidebar(false)}
+        aria-hidden="true"
+      />
+
+      {/* ── Main Content Area ──────────────────── */}
+      <div className={`main-content-area ${sidebarCollapsed ? 'collapsed' : ''}`}>
+        <header className="top-header">
+          <div className="mobile-header-left">
+            <button
+              onClick={() => setShowSidebar(v => !v)}
+              className="glass-card action-btn hamburger-btn"
+              aria-label="Toggle menu"
+            >
+              <Menu size={20} />
+            </button>
+            <h1 className="mobile-logo gradient-text">TaskTracker</h1>
+          </div>
+
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginLeft: 'auto' }}>
           {/* User info */}
           <button
             onClick={() => navigate('/settings')}
@@ -176,63 +240,22 @@ export function AppLayout({ session }: { session: Session }) {
             </button>
             
             <button
-              onClick={() => setShowSidebar(v => !v)}
-              className="glass-card action-btn hamburger-btn"
-              aria-label="Toggle menu"
-              style={{ marginLeft: '4px' }}
+              onClick={() => supabase.auth.signOut()}
+              className="glass-card action-btn"
+              style={{ color: 'var(--accent)', fontSize: '0.85rem', fontWeight: 600, padding: '10px 14px', marginLeft: '4px' }}
+              title="Sign Out"
             >
-              {showSidebar ? <X size={20} /> : <Menu size={20} />}
+              <LogOut size={16} /> <span className="hide-on-mobile" style={{ fontSize: '0.85rem' }}>Sign Out</span>
             </button>
           </div>
-        </div>
-      </header>
+        </header>
 
-      <div
-        className={`sidebar-overlay${showSidebar ? ' open' : ''}`}
-        onClick={() => setShowSidebar(false)}
-        aria-hidden="true"
-      />
-
-      <div className={`task-grid${sidebarCollapsed ? ' sidebar-collapsed' : ''}`}>
-        <aside className={`sidebar${showSidebar ? ' sidebar-open' : ''}`}>
-          <div className="glass-card" style={{ padding: '8px', marginBottom: '12px' }}>
-            <nav style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-              {NAV_ITEMS.map(({ to, label, icon }) => (
-                <NavLink
-                  key={to}
-                  to={to}
-                  className={({ isActive }) => `sidebar-nav-link${isActive ? ' active' : ''}`}
-                >
-                  <span style={{ flexShrink: 0 }}>{icon}</span>
-                  {!sidebarCollapsed && <span>{label}</span>}
-                </NavLink>
-              ))}
-              <div style={{ height: '1px', background: 'var(--glass-border)', margin: '4px 0' }} />
-              <button
-                onClick={handleTrashToggle}
-                className={`sidebar-nav-link ${showTrash ? 'active' : ''}`}
-                style={{ width: '100%', textAlign: 'left' }}
-              >
-                <span style={{ flexShrink: 0 }}><Trash2 size={16} /></span>
-                {!sidebarCollapsed && <span>Trash</span>}
-              </button>
-            </nav>
-          </div>
-
-          <button
-            onClick={() => setSidebarCollapsed(v => !v)}
-            className="collapse-btn"
-            style={{ width: '100%', background: 'rgba(255,255,255,0.04)', color: 'var(--text-muted)', borderRadius: '10px', padding: '8px', fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', border: '1px solid var(--glass-border)' }}
-            title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          >
-            {sidebarCollapsed ? <ChevronRight size={14} /> : <><ChevronLeft size={14} /><span>Collapse</span></>}
-          </button>
-        </aside>
-
-        <main>
+        <main className="main-content-inner">
           <Outlet context={context} />
         </main>
       </div>
+
+
 
       {/* Trash Modal */}
       <AnimatePresence>
