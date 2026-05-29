@@ -1,12 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { useOutletContext, useLocation } from 'react-router-dom'
+import { useOutletContext, useLocation, useNavigate } from 'react-router-dom'
 import {
   Plus, Search, List, LayoutGrid, BarChart2, AlertCircle,
   Bell, Users, Briefcase, UserCheck, Download,
   BarChart3, TrendingUp,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { TaskForm } from '../components/tasks/TaskForm'
 import { TaskItem } from '../components/tasks/TaskItem'
 import { KanbanBoard } from '../components/tasks/KanbanBoard'
 import { AnalyticsCharts } from '../components/ui/AnalyticsCharts'
@@ -25,6 +24,7 @@ type ViewLayout = 'list' | 'kanban' | 'charts'
 export function TasksPage() {
   const { session, viewMode, setViewMode, setUnreadCount } = useOutletContext<AppContext>()
   const location = useLocation()
+  const navigate = useNavigate()
 
   const [filter, setFilter] = useState<FilterValue>('all')
   const [viewLayout, setViewLayout] = useState<ViewLayout>('list')
@@ -32,7 +32,6 @@ export function TasksPage() {
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [bulkMode, setBulkMode] = useState(false)
   const [selectedIds, setSelectedIds] = useState<string[]>([])
-  const [showForm, setShowForm] = useState(false)
   const [page, setPage] = useState(0)
   const [totalCount, setTotalCount] = useState(0)
   const [allTasks, setAllTasks] = useState<Task[]>([])
@@ -40,10 +39,9 @@ export function TasksPage() {
 
   useEffect(() => {
     if ((location.state as any)?.openForm) {
-      setShowForm(true)
-      window.history.replaceState({}, '')
+      navigate('/tasks/new', { replace: true })
     }
-  }, [])
+  }, [location, navigate])
 
   useEffect(() => {
     const h = setTimeout(() => setDebouncedSearch(searchTerm), 300)
@@ -276,11 +274,11 @@ export function TasksPage() {
         </button>
 
         <button
-          onClick={() => setShowForm(v => !v)}
+          onClick={() => navigate('/tasks/new')}
           className="primary-gradient action-btn main-action"
         >
           <Plus size={18} />
-          {showForm ? 'Close' : 'New Task'}
+          New Task
         </button>
 
         <button
@@ -296,26 +294,6 @@ export function TasksPage() {
           {bulkMode ? 'Cancel' : 'Select'}
         </button>
       </div>
-
-      {/* Task form */}
-      <AnimatePresence mode="wait">
-        {showForm && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            style={{ marginBottom: '24px' }}
-          >
-            <TaskForm
-              onTaskAdded={() => { fetchTasks(true); setShowForm(false) }}
-              userId={user.id}
-              userEmail={userEmail}
-              fullName={fullName}
-              teamName={user.user_metadata.team_name}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Bulk select-all bar */}
       {bulkMode && filteredTasks.length > 0 && viewLayout !== 'charts' && (

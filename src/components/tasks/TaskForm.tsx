@@ -8,6 +8,7 @@ import { type TaskRecurrence } from '../../supabase'
 
 interface TaskFormProps {
   onTaskAdded: () => void
+  onCancel?: () => void
   userId: string
   userEmail?: string
   fullName?: string
@@ -32,7 +33,7 @@ const label = (text: string) => (
   </label>
 )
 
-export function TaskForm({ onTaskAdded, userId, userEmail, fullName, teamName }: TaskFormProps) {
+export function TaskForm({ onTaskAdded, onCancel, userId, userEmail, fullName, teamName }: TaskFormProps) {
   const [title, setTitle] = useState('')
   const [giver, setGiver] = useState(fullName || '')
   const [assignedTo, setAssignedTo] = useState('')
@@ -348,6 +349,11 @@ export function TaskForm({ onTaskAdded, userId, userEmail, fullName, teamName }:
           <button type="submit" disabled={loading} className="primary-gradient" style={{ width: '100%', height: '48px', borderRadius: '12px', color: 'white', fontWeight: 600, fontSize: '1rem' }}>
             {loading ? 'Creating...' : 'Assign Task'}
           </button>
+          {onCancel && (
+            <button type="button" onClick={onCancel} style={{ width: '100%', height: '48px', borderRadius: '12px', background: 'transparent', border: '1px solid var(--glass-border)', color: 'var(--text-muted)', fontWeight: 600, fontSize: '1rem', marginTop: '12px', transition: 'all 0.2s' }} className="hover-bg-glass">
+              Cancel
+            </button>
+          )}
         </div>
 
       </div>
