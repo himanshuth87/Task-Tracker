@@ -3,7 +3,7 @@ import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import {
   Bell, LogOut, Sun, Moon, Menu, X, ChevronLeft, ChevronRight,
   Zap, LayoutDashboard, ListTodo, BarChart2, Settings,
-  Trash2, RotateCcw, Loader2,
+  Trash2, RotateCcw, Loader2, CalendarDays
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { Session } from '@supabase/supabase-js'
@@ -23,6 +23,7 @@ export interface AppContext {
 const NAV_ITEMS = [
   { to: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard size={16} /> },
   { to: '/tasks', label: 'Tasks', icon: <ListTodo size={16} /> },
+  { to: '/calendar', label: 'Calendar', icon: <CalendarDays size={16} /> },
   { to: '/analytics', label: 'Analytics', icon: <BarChart2 size={16} /> },
   { to: '/settings', label: 'Settings', icon: <Settings size={16} /> },
 ]
