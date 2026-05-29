@@ -48,7 +48,9 @@ export function Auth() {
         isNewTeam = true
       }
 
-      // 2. If team exists, verify invitation
+      // 2. Invitation check bypassed as requested by user
+      // Users can now join existing teams just by typing the name
+      /*
       if (!isNewTeam) {
         const { data: invite, error: inviteErr } = await supabase
           .from('team_invitations')
@@ -64,6 +66,7 @@ export function Auth() {
           return
         }
       }
+      */
 
       const { data, error } = await supabase.auth.signUp({
         email,
