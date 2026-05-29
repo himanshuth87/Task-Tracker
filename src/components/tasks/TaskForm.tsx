@@ -1,10 +1,10 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { toast } from 'sonner'
 import { Plus, X, Paperclip, CheckSquare, File, Image, FileText, Tag } from 'lucide-react'
 import { taskService } from '../../services/taskService'
 import { subtaskService } from '../../services/subtaskService'
 import { attachmentService } from '../../services/attachmentService'
-import { type TaskRecurrence } from '../../supabase'
+import { supabase, type TaskRecurrence } from '../../supabase'
 
 interface TaskFormProps {
   onTaskAdded: () => void
@@ -45,6 +45,18 @@ export function TaskForm({ onTaskAdded, onCancel, userId, userEmail, fullName, t
   const [tags, setTags] = useState<string[]>([])
   const [tagInput, setTagInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const [teamMembers, setTeamMembers] = useState<{ email: string; full_name: string }[]>([])
+
+  useEffect(() => {
+    async function loadMembers() {
+      const { data } = await supabase
+        .from('profiles')
+        .select('email, full_name')
+        .eq('team_name', teamName || 'General')
+      if (data) setTeamMembers(data)
+    }
+    loadMembers()
+  }, [teamName])
 
   // Draft checklist items (pre-creation)
   const [checklistItems, setChecklistItems] = useState<string[]>([])
@@ -93,7 +105,7 @@ export function TaskForm({ onTaskAdded, onCancel, userId, userEmail, fullName, t
     const { error, data: newTask } = await taskService.addTask({
       title,
       task_giver: giver,
-      assigned_to_email: assignedTo || userEmail,
+      assigned_to_email: assignedTo || null,
       start_date: startDate,
       deadline,
       remarks,
@@ -138,7 +150,7 @@ export function TaskForm({ onTaskAdded, onCancel, userId, userEmail, fullName, t
     if (checklistItems.length > 0) extras.push(`${checklistItems.length} checklist item${checklistItems.length > 1 ? 's' : ''}`)
     if (draftFiles.length > 0) extras.push(`${draftFiles.length} file${draftFiles.length > 1 ? 's' : ''}`)
 
-    toast.success(extras.length > 0 ? `Task created with ${extras.join(' & ')}!` : 'Task assigned successfully!')
+    toast.success(extras.length > 0 ? `Task saved with ${extras.join(' & ')}!` : (assignedTo ? 'Task assigned successfully!' : 'Task saved successfully!'))
 
     // Reset
     setTitle('')
@@ -172,8 +184,13 @@ export function TaskForm({ onTaskAdded, onCancel, userId, userEmail, fullName, t
         </div>
 
         <div>
-          {label('Assign To (Email)')}
-          <input type="email" value={assignedTo} onChange={e => setAssignedTo(e.target.value)} placeholder="colleague@company.com" style={{ width: '100%' }} />
+          {label('Assign To (optional)')}
+          <select value={assignedTo} onChange={e => setAssignedTo(e.target.value)} style={{ width: '100%' }}>
+            <option value="">Unassigned (Save for later)</option>
+            {teamMembers.map(m => (
+              <option key={m.email} value={m.email}>{m.full_name} ({m.email})</option>
+            ))}
+          </select>
         </div>
 
         <div>
@@ -347,7 +364,7 @@ export function TaskForm({ onTaskAdded, onCancel, userId, userEmail, fullName, t
 
         <div style={{ gridColumn: 'span 2' }}>
           <button type="submit" disabled={loading} className="primary-gradient" style={{ width: '100%', height: '48px', borderRadius: '12px', color: 'white', fontWeight: 600, fontSize: '1rem' }}>
-            {loading ? 'Creating...' : 'Assign Task'}
+            {loading ? 'Saving...' : (assignedTo ? 'Assign Task' : 'Save Task')}
           </button>
           {onCancel && (
             <button type="button" onClick={onCancel} style={{ width: '100%', height: '48px', borderRadius: '12px', background: 'transparent', border: '1px solid var(--glass-border)', color: 'var(--text-muted)', fontWeight: 600, fontSize: '1rem', marginTop: '12px', transition: 'all 0.2s' }} className="hover-bg-glass">
