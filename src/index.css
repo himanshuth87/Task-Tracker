@@ -58,25 +58,25 @@
 
   /* Primary palette — darker for better contrast on light backgrounds */
   --primary: #4f46e5;
-  --primary-glow: rgba(79, 70, 229, 0.25);
+  --primary-glow: rgba(79, 70, 229, 0.15);
   --secondary: #7c3aed;
   --accent: #e11d48;
 
   /* Surfaces */
-  --bg-dark: #f8fafc;
-  --body-bg: radial-gradient(circle at 50% 0%, #ddd6fe 0%, #f0f0f7 100%);
-  --card-bg: rgba(255, 255, 255, 0.85);
-  --border-color: rgba(0, 0, 0, 0.1);
+  --bg-dark: #ffffff;
+  --body-bg: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  --card-bg: #ffffff;
+  --border-color: rgba(0, 0, 0, 0.08);
 
   /* Text */
   --text-muted: #64748b;
-  --text-main: #1e1e2e;
+  --text-main: #0f172a;
   --grad-start: var(--primary);
-  --input-text: #1e1e2e;
+  --input-text: #0f172a;
 
   /* Glass */
-  --glass-bg: rgba(255, 255, 255, 0.65);
-  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(0, 0, 0, 0.06);
 
   /* Scrollbar */
   --scrollbar-thumb: rgba(0, 0, 0, 0.15);

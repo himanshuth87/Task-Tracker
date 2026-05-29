@@ -157,71 +157,6 @@ export function AppLayout({ session }: { session: Session }) {
             </AnimatePresence>
           </div>
 
-          {/* Trash bin */}
-          <div style={{ position: 'relative' }}>
-            <button
-              onClick={handleTrashToggle}
-              className="glass-card action-btn"
-              title="Trash bin"
-              style={{ color: showTrash ? 'var(--accent)' : 'var(--text-muted)' }}
-            >
-              <Trash2 size={20} />
-            </button>
-            <AnimatePresence>
-              {showTrash && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                  className="glass-card notification-dropdown"
-                  style={{ minWidth: '360px' }}
-                >
-                  <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <Trash2 size={15} color="var(--text-muted)" />
-                      <span style={{ fontWeight: 600, fontSize: '0.95rem' }}>Trash Bin</span>
-                    </div>
-                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>30-day retention</span>
-                  </div>
-                  <div style={{ maxHeight: '360px', overflowY: 'auto', padding: '8px' }}>
-                    {trashLoading ? (
-                      <div style={{ display: 'flex', justifyContent: 'center', padding: '32px' }}>
-                        <Loader2 size={20} color="var(--primary)" className="animate-spin" />
-                      </div>
-                    ) : deletedTasks.length === 0 ? (
-                      <p style={{ textAlign: 'center', padding: '32px 16px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>Trash is empty</p>
-                    ) : (
-                      deletedTasks.map(task => (
-                        <div key={task.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 8px', borderRadius: '10px', borderBottom: '1px solid var(--glass-border)' }}>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <p style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--text-main)', opacity: 0.7, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{task.title}</p>
-                            <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                              Deleted {new Date(task.deleted_at!).toLocaleDateString()}
-                            </p>
-                          </div>
-                          <button
-                            onClick={() => handleRestore(task)}
-                            title="Restore"
-                            style={{ background: 'rgba(16,185,129,0.1)', color: '#10b981', padding: '5px 8px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', flexShrink: 0 }}
-                          >
-                            <RotateCcw size={12} /> Restore
-                          </button>
-                          <button
-                            onClick={() => handleHardDelete(task)}
-                            title="Delete forever"
-                            style={{ background: 'rgba(244,63,94,0.1)', color: '#f43f5e', padding: '5px 8px', borderRadius: '8px', flexShrink: 0 }}
-                          >
-                            <X size={13} />
-                          </button>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
             <button
               onClick={() => setIsLightMode(v => !v)}
               className="glass-card action-btn"
@@ -272,6 +207,15 @@ export function AppLayout({ session }: { session: Session }) {
                   {!sidebarCollapsed && <span>{label}</span>}
                 </NavLink>
               ))}
+              <div style={{ height: '1px', background: 'var(--glass-border)', margin: '4px 0' }} />
+              <button
+                onClick={handleTrashToggle}
+                className={`sidebar-nav-link ${showTrash ? 'active' : ''}`}
+                style={{ width: '100%', textAlign: 'left' }}
+              >
+                <span style={{ flexShrink: 0 }}><Trash2 size={16} /></span>
+                {!sidebarCollapsed && <span>Trash</span>}
+              </button>
             </nav>
           </div>
 
@@ -289,6 +233,79 @@ export function AppLayout({ session }: { session: Session }) {
           <Outlet context={context} />
         </main>
       </div>
+
+      {/* Trash Modal */}
+      <AnimatePresence>
+        {showTrash && (
+          <div className="modal-overlay" onClick={() => setShowTrash(false)}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="glass-card"
+              style={{ width: '100%', maxWidth: '540px', padding: 0, overflow: 'hidden' }}
+              onClick={e => e.stopPropagation()}
+            >
+              <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ background: 'rgba(244,63,94,0.1)', padding: '8px', borderRadius: '10px' }}>
+                    <Trash2 size={20} color="#f43f5e" />
+                  </div>
+                  <div>
+                    <h3 style={{ fontWeight: 700, fontSize: '1.2rem', margin: 0, color: 'var(--text-main)' }}>Trash Bin</h3>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>Tasks are retained for 30 days</p>
+                  </div>
+                </div>
+                <button onClick={() => setShowTrash(false)} style={{ background: 'transparent', color: 'var(--text-muted)', padding: '4px' }}>
+                  <X size={20} />
+                </button>
+              </div>
+              
+              <div style={{ maxHeight: '60vh', overflowY: 'auto', padding: '16px' }}>
+                {trashLoading ? (
+                  <div style={{ display: 'flex', justifyContent: 'center', padding: '40px' }}>
+                    <Loader2 size={24} color="var(--primary)" className="animate-spin" />
+                  </div>
+                ) : deletedTasks.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+                    <Trash2 size={40} color="var(--glass-border)" style={{ marginBottom: '12px', opacity: 0.5 }} />
+                    <p style={{ color: 'var(--text-muted)', fontSize: '1rem' }}>Your trash is empty.</p>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {deletedTasks.map(task => (
+                      <div key={task.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '12px', background: 'var(--glass-bg)', border: '1px solid var(--glass-border)' }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-main)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', opacity: 0.8 }}>{task.title}</p>
+                          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                            Deleted on {new Date(task.deleted_at!).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => handleRestore(task)}
+                          className="hover-bg-glass"
+                          title="Restore"
+                          style={{ background: 'rgba(16,185,129,0.1)', color: '#10b981', padding: '6px 12px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', fontWeight: 600 }}
+                        >
+                          <RotateCcw size={14} /> Restore
+                        </button>
+                        <button
+                          onClick={() => handleHardDelete(task)}
+                          className="hover-bg-glass"
+                          title="Delete forever"
+                          style={{ background: 'rgba(244,63,94,0.1)', color: '#f43f5e', padding: '6px 10px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', fontWeight: 600 }}
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
