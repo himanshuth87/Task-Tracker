@@ -49,11 +49,21 @@ export function TaskForm({ onTaskAdded, onCancel, userId, userEmail, fullName, t
 
   useEffect(() => {
     async function loadMembers() {
-      const { data } = await supabase
-        .from('profiles')
-        .select('email, full_name')
-        .eq('team_name', teamName || 'General')
-      if (data) setTeamMembers(data)
+      const team = teamName || 'General'
+
+      const [{ data: profiles }, { data: invitations }] = await Promise.all([
+        supabase.from('profiles').select('email, full_name').eq('team_name', team),
+        supabase.from('team_invitations').select('invited_email').eq('team_name', team).eq('status', 'pending'),
+      ])
+
+      const registered = profiles || []
+      const registeredEmails = new Set(registered.map(m => m.email))
+
+      const pending = (invitations || [])
+        .filter(inv => !registeredEmails.has(inv.invited_email))
+        .map(inv => ({ email: inv.invited_email, full_name: `${inv.invited_email} (invited)` }))
+
+      setTeamMembers([...registered, ...pending])
     }
     loadMembers()
   }, [teamName])
