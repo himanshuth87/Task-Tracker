@@ -49,8 +49,6 @@ export function TaskForm({ onTaskAdded, onCancel, userId, userEmail, fullName, t
 
   useEffect(() => {
     async function loadMembers() {
-      const team = teamName || 'General'
-
       const [{ data: profiles }, { data: invitations }] = await Promise.all([
         supabase.from('profiles').select('email, full_name, team_name').order('team_name'),
         supabase.from('team_invitations').select('invited_email, team_name').eq('status', 'pending'),
