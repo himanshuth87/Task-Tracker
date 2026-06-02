@@ -45,15 +45,15 @@ export function TaskForm({ onTaskAdded, onCancel, userId, userEmail, fullName, t
   const [tags, setTags] = useState<string[]>([])
   const [tagInput, setTagInput] = useState('')
   const [loading, setLoading] = useState(false)
-  const [teamMembers, setTeamMembers] = useState<{ email: string; full_name: string }[]>([])
+  const [teamMembers, setTeamMembers] = useState<{ email: string; full_name: string; team_name?: string }[]>([])
 
   useEffect(() => {
     async function loadMembers() {
       const team = teamName || 'General'
 
       const [{ data: profiles }, { data: invitations }] = await Promise.all([
-        supabase.from('profiles').select('email, full_name').eq('team_name', team),
-        supabase.from('team_invitations').select('invited_email').eq('team_name', team).eq('status', 'pending'),
+        supabase.from('profiles').select('email, full_name, team_name').order('team_name'),
+        supabase.from('team_invitations').select('invited_email, team_name').eq('status', 'pending'),
       ])
 
       const registered = profiles || []
@@ -61,7 +61,7 @@ export function TaskForm({ onTaskAdded, onCancel, userId, userEmail, fullName, t
 
       const pending = (invitations || [])
         .filter(inv => !registeredEmails.has(inv.invited_email))
-        .map(inv => ({ email: inv.invited_email, full_name: `${inv.invited_email} (invited)` }))
+        .map(inv => ({ email: inv.invited_email, full_name: `${inv.invited_email} (invited)`, team_name: inv.team_name }))
 
       setTeamMembers([...registered, ...pending])
     }
@@ -207,7 +207,7 @@ export function TaskForm({ onTaskAdded, onCancel, userId, userEmail, fullName, t
           <select value={assignedTo} onChange={e => setAssignedTo(e.target.value)} style={{ width: '100%' }}>
             <option value="">Unassigned (Save for later)</option>
             {teamMembers.map(m => (
-              <option key={m.email} value={m.email}>{m.full_name} ({m.email})</option>
+              <option key={m.email} value={m.email}>{m.full_name} ({m.team_name}) — {m.email}</option>
             ))}
           </select>
         </div>
