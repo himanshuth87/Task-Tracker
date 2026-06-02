@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { supabase } from './supabase'
 import { motion } from 'framer-motion'
@@ -15,6 +15,20 @@ export function Auth() {
   const [view, setView] = useState<AuthView>('signin')
   const [resetSent, setResetSent] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [lockedEmail, setLockedEmail] = useState(false)
+  const [lockedTeam, setLockedTeam] = useState(false)
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('invite') === 'true') {
+      const inviteEmail = params.get('email') || ''
+      const inviteTeam = params.get('team') || ''
+      if (inviteEmail) { setEmail(inviteEmail); setLockedEmail(true) }
+      if (inviteTeam) { setTeamName(inviteTeam); setLockedTeam(true) }
+      setView('signup')
+      window.history.replaceState({}, '', window.location.pathname)
+    }
+  }, [])
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -193,14 +207,14 @@ export function Auth() {
                 </div>
                 <div>
                   {inputLabel('Team Name', <Users size={16} />)}
-                  <input required value={teamName} onChange={e => setTeamName(e.target.value)} placeholder="e.g. Marketing, Sales, IT" style={{ width: '100%' }} />
+                  <input required value={teamName} onChange={e => !lockedTeam && setTeamName(e.target.value)} placeholder="e.g. Marketing, Sales, IT" style={{ width: '100%', opacity: lockedTeam ? 0.6 : 1, cursor: lockedTeam ? 'not-allowed' : 'text' }} readOnly={lockedTeam} />
                 </div>
               </>
             )}
 
             <div>
               {inputLabel('Email Address', <Mail size={16} />)}
-              <input required type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="name@company.com" style={{ width: '100%' }} />
+              <input required type="email" value={email} onChange={e => !lockedEmail && setEmail(e.target.value)} placeholder="name@company.com" style={{ width: '100%', opacity: lockedEmail ? 0.6 : 1, cursor: lockedEmail ? 'not-allowed' : 'text' }} readOnly={lockedEmail} />
             </div>
 
             {view !== 'reset' && (

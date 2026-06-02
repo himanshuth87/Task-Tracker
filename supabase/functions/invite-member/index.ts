@@ -50,7 +50,7 @@ serve(async (req) => {
             </div>
 
             <div style="text-align: center;">
-              <a href="${appUrl}" style="display: inline-block; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; padding: 14px 32px; border-radius: 10px; text-decoration: none; font-weight: 600; font-size: 0.95rem; letter-spacing: 0.02em;">
+              <a href="${appUrl}?invite=true&team=${encodeURIComponent(team_name)}&email=${encodeURIComponent(invited_email)}" style="display: inline-block; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; padding: 14px 32px; border-radius: 10px; text-decoration: none; font-weight: 600; font-size: 0.95rem; letter-spacing: 0.02em;">
                 Join TaskTracker →
               </a>
             </div>
