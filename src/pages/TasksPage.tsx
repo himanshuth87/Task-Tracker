@@ -108,8 +108,6 @@ export function TasksPage() {
     return () => { channel.unsubscribe() }
   }, [session])
 
-  const filteredTasks = allTasks
-
   const stats = {
     total: totalCount,
     completed: allTasks.filter(t => t.status === 'completed').length,
@@ -139,7 +137,7 @@ export function TasksPage() {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
 
   const toggleSelectAll = () =>
-    setSelectedIds(prev => prev.length === filteredTasks.length ? [] : filteredTasks.map(t => t.id))
+    setSelectedIds(prev => prev.length === allTasks.length ? [] : allTasks.map(t => t.id))
 
   const clearBulk = () => { setSelectedIds([]); setBulkMode(false) }
 
@@ -296,10 +294,10 @@ export function TasksPage() {
       </div>
 
       {/* Bulk select-all bar */}
-      {bulkMode && filteredTasks.length > 0 && viewLayout !== 'charts' && (
+      {bulkMode && allTasks.length > 0 && viewLayout !== 'charts' && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px', padding: '8px 12px', borderRadius: '10px', background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)' }}>
           <button onClick={toggleSelectAll} style={{ background: 'transparent', color: 'var(--primary)', fontSize: '0.82rem', fontWeight: 600 }}>
-            {selectedIds.length === filteredTasks.length ? 'Deselect All' : `Select All (${filteredTasks.length})`}
+            {selectedIds.length === allTasks.length ? 'Deselect All' : `Select All (${allTasks.length})`}
           </button>
           {selectedIds.length > 0 && <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{selectedIds.length} selected</span>}
         </div>
@@ -310,7 +308,7 @@ export function TasksPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {[0, 1, 2, 3].map(i => <div key={i} className="skeleton-card" style={{ animationDelay: `${i * 0.1}s` }} />)}
         </div>
-      ) : filteredTasks.length === 0 ? (
+      ) : allTasks.length === 0 ? (
         <div className="glass-card" style={{ padding: '80px 40px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <ClipboardList size={48} color="var(--glass-border)" style={{ marginBottom: '16px', opacity: 0.5 }} />
           <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>
@@ -324,12 +322,12 @@ export function TasksPage() {
         <AnalyticsCharts tasks={allTasks} />
       ) : viewLayout === 'kanban' ? (
         <div style={{ overflowX: 'auto' }}>
-          <KanbanBoard tasks={filteredTasks} onUpdate={() => fetchTasks(true)} />
+          <KanbanBoard tasks={allTasks} onUpdate={() => fetchTasks(true)} />
         </div>
       ) : (
         <>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {filteredTasks.map(task => (
+            {allTasks.map(task => (
               <TaskItem
                 key={task.id}
                 task={task}

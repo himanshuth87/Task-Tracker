@@ -62,26 +62,6 @@ export function Auth() {
         isNewTeam = true
       }
 
-      // 2. Invitation check bypassed as requested by user
-      // Users can now join existing teams just by typing the name
-      /*
-      if (!isNewTeam) {
-        const { data: invite, error: inviteErr } = await supabase
-          .from('team_invitations')
-          .select('*')
-          .eq('team_name', teamName || 'General')
-          .eq('invited_email', email)
-          .eq('status', 'pending')
-          .single()
-
-        if (!invite || inviteErr) {
-          toast.error(`Team "${teamName || 'General'}" already exists. You need an invitation to join.`)
-          setLoading(false)
-          return
-        }
-      }
-      */
-
       const { data, error } = await supabase.auth.signUp({
         email,
         password,

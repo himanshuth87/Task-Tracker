@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Calendar, Mail, Edit2, Trash2, Check, X, User, Clock, MessageCircle, ChevronDown, ChevronUp, AlertCircle, Loader2, CheckSquare, Paperclip, Link2, History, Square, Timer, Send } from 'lucide-react'
+import { Calendar, Edit2, Trash2, Check, X, User, Clock, MessageCircle, ChevronDown, ChevronUp, AlertCircle, Loader2, CheckSquare, Paperclip, Link2, History, Square, Timer, Send } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { type Task, type TaskStatus, supabase } from '../../supabase'
@@ -110,12 +110,6 @@ export function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId, curre
     } else {
       toast.error('Update failed')
     }
-  }
-
-  const sendNotificationMail = () => {
-    const subject = encodeURIComponent(`Task Update: ${task.title}`)
-    const body = encodeURIComponent(`Hello,\n\nHere's an update on the task assigned to you.\n\nTask: ${task.title}\nAssigned By: ${task.task_giver}\nDeadline: ${formatDate(task.deadline)}\n\nRemarks: ${task.remarks || 'None'}\n\nView Task Tracker: ${window.location.origin}`)
-    window.location.href = `mailto:${task.assigned_to_email || ''}?subject=${subject}&body=${body}`
   }
 
   const daysRemaining = getDaysRemaining(task.deadline)
@@ -303,9 +297,6 @@ export function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId, curre
             <>
               <button onClick={onAddToCalendar} title="Add to Calendar" style={{ background: 'transparent', color: 'var(--primary)', opacity: 0.8 }}>
                 <Calendar size={18} />
-              </button>
-              <button onClick={sendNotificationMail} title="Email Assignee" style={{ background: 'transparent', color: 'var(--text-muted)', opacity: 0.6 }}>
-                <Mail size={18} />
               </button>
               {isOwner && (
                 <>
