@@ -230,7 +230,6 @@ export function TasksPage() {
           {([
             { key: 'list' as const, icon: <List size={14} />, label: 'List' },
             { key: 'kanban' as const, icon: <LayoutGrid size={14} />, label: 'Board' },
-            { key: 'charts' as const, icon: <BarChart2 size={14} />, label: 'Charts' },
           ]).map(({ key, icon, label }) => (
             <button
               key={key}
@@ -247,11 +246,6 @@ export function TasksPage() {
             </button>
           ))}
         </div>
-
-        <button onClick={() => downloadExcel(allTasks)} className="glass-card action-btn" title="Export to Excel">
-          <Download size={16} />
-          <span style={{ fontSize: '0.85rem' }}>Export</span>
-        </button>
 
         <button
           onClick={() => navigate('/tasks/new')}
@@ -314,7 +308,6 @@ export function TasksPage() {
                 key={task.id}
                 task={task}
                 onUpdate={() => fetchTasks(true)}
-                onAddToCalendar={() => addToOutlook(task)}
                 currentUserId={user.id}
                 currentUserEmail={userEmail}
                 currentUserName={fullName}

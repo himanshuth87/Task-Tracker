@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Calendar, Edit2, Trash2, Check, X, User, Clock, MessageCircle, ChevronDown, ChevronUp, AlertCircle, Loader2, CheckSquare, Paperclip, History, Square, Timer, Send } from 'lucide-react'
+import { Edit2, Trash2, Check, X, User, Clock, MessageCircle, ChevronDown, ChevronUp, AlertCircle, Loader2, CheckSquare, Paperclip, History, Square, Timer, Send } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { type Task, type TaskStatus, supabase } from '../../supabase'
@@ -16,7 +16,6 @@ import { ConfirmModal } from '../ui/ConfirmModal'
 interface TaskItemProps {
   task: Task
   onUpdate: () => void
-  onAddToCalendar: () => void
   currentUserId: string
   currentUserEmail: string
   currentUserName: string
@@ -38,7 +37,7 @@ const RECURRENCE_LABEL: Record<string, string> = {
 
 type Panel = 'comments' | 'subtasks' | 'attachments' | 'dependencies' | 'activity' | null
 
-export function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId, currentUserEmail, currentUserName, isSelected, onToggleSelect, bulkMode }: TaskItemProps) {
+export function TaskItem({ task, onUpdate, currentUserId, currentUserEmail, currentUserName, isSelected, onToggleSelect, bulkMode }: TaskItemProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [editedTask, setEditedTask] = useState({ ...task, tags: task.tags || [], time_logged_minutes: task.time_logged_minutes || 0 })
   const [tagInput, setTagInput] = useState('')
@@ -301,9 +300,6 @@ export function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId, curre
             </>
           ) : (
             <>
-              <button onClick={onAddToCalendar} title="Add to Calendar" style={{ background: 'transparent', color: 'var(--primary)', opacity: 0.8 }}>
-                <Calendar size={18} />
-              </button>
               {isOwner && (
                 <>
                   <button onClick={() => setIsEditing(true)} style={{ background: 'transparent', color: 'rgba(255,255,255,0.4)' }}>

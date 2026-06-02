@@ -235,7 +235,6 @@ export function CalendarPage() {
                       key={task.id} 
                       task={task} 
                       onUpdate={loadTasks}
-                      onAddToCalendar={() => {}}
                       currentUserId={session.user.id}
                       currentUserEmail={session.user.email || ''}
                       currentUserName={session.user.user_metadata?.full_name || ''}

@@ -42,7 +42,8 @@ export const taskService = {
         query = query.or(`user_id.eq.${session.user.id},assigned_to_email.eq.${session.user.email}`)
       }
     } else if (viewMode === 'team') {
-      const teamName = session.user.user_metadata.team_name || 'General'
+      const { data: profile } = await supabase.from('profiles').select('team_name').eq('id', session.user.id).single()
+      const teamName = profile?.team_name || session.user.user_metadata.team_name || 'General'
       query = query.eq('team_name', teamName)
     }
 
@@ -76,7 +77,8 @@ export const taskService = {
         query = query.or(`user_id.eq.${session.user.id},assigned_to_email.eq.${session.user.email}`)
       }
     } else if (viewMode === 'team') {
-      const teamName = session.user.user_metadata.team_name || 'General'
+      const { data: profile } = await supabase.from('profiles').select('team_name').eq('id', session.user.id).single()
+      const teamName = profile?.team_name || session.user.user_metadata.team_name || 'General'
       query = query.eq('team_name', teamName)
     }
 
