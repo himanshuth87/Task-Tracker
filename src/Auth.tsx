@@ -35,11 +35,11 @@ export function Auth() {
     setLoading(true)
 
     if (view === 'reset') {
-      const { error } = await supabase.functions.invoke('reset-password', {
+      const { data, error } = await supabase.functions.invoke('reset-password', {
         body: { email },
       })
-      if (error) {
-        toast.error('Could not send reset email. Please try again.')
+      if (error || data?.error) {
+        toast.error('No account found with that email address.')
       } else {
         setResetSent(true)
         toast.success('Password reset email sent!')
