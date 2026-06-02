@@ -35,11 +35,11 @@ export function Auth() {
     setLoading(true)
 
     if (view === 'reset') {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}`,
+      const { error } = await supabase.functions.invoke('reset-password', {
+        body: { email },
       })
       if (error) {
-        toast.error(error.message)
+        toast.error('Could not send reset email. Please try again.')
       } else {
         setResetSent(true)
         toast.success('Password reset email sent!')
