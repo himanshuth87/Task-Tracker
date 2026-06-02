@@ -373,10 +373,10 @@ export function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId, curre
                 <span>{subtasksInfo.completed} / {subtasksInfo.total} Subtasks</span>
               </div>
             )}
-            {(task.time_logged_minutes > 0 || isAssignee) && (
+            {((task.time_logged_minutes ?? 0) > 0 || isAssignee) && (
               <div className="meta-info">
                 <Timer size={13} />
-                {task.time_logged_minutes > 0 && <span>{task.time_logged_minutes}m logged</span>}
+                {(task.time_logged_minutes ?? 0) > 0 && <span>{task.time_logged_minutes}m logged</span>}
                 {isAssignee && (
                   <div style={{ display: 'flex', gap: '2px', marginLeft: '4px' }}>
                     <button onClick={() => handleTimeLog(15)} title="+15m" style={{ background: 'rgba(99,102,241,0.1)', color: 'var(--primary)', fontSize: '0.7rem', padding: '1px 4px', borderRadius: '4px' }}>+15</button>
