@@ -26,7 +26,10 @@ export function TasksPage() {
   const location = useLocation()
   const navigate = useNavigate()
 
-  const [filter, setFilter] = useState<FilterValue>('all')
+  const [filter, setFilter] = useState<FilterValue>(() => {
+    const params = new URLSearchParams(window.location.search)
+    return params.get('view') === 'assigned_to_me' ? 'assigned_to_me' : 'all'
+  })
   const [viewLayout, setViewLayout] = useState<ViewLayout>('list')
   const [searchTerm, setSearchTerm] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')

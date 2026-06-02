@@ -149,8 +149,8 @@ serve(async (req) => {
 
             <!-- CTA -->
             <div style="margin-top: 32px; text-align: center;">
-              <a href="https://tasktracker.hscvpl.in" style="display: inline-block; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; padding: 14px 32px; border-radius: 10px; text-decoration: none; font-weight: 600; font-size: 0.95rem; letter-spacing: 0.02em;">
-                Open Task Tracker →
+              <a href="https://tasktracker.hscvpl.in/tasks?view=assigned_to_me" style="display: inline-block; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; padding: 14px 32px; border-radius: 10px; text-decoration: none; font-weight: 600; font-size: 0.95rem; letter-spacing: 0.02em;">
+                View My Tasks →
               </a>
             </div>
           </div>
