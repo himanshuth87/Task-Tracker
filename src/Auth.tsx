@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { supabase } from './supabase'
 import { motion } from 'framer-motion'
-import { LogIn, UserPlus, Mail, Lock, Loader2, User, Users, KeyRound, ArrowLeft, Eye, EyeOff, Trash2 } from 'lucide-react'
+import { LogIn, UserPlus, Mail, Lock, Loader2, User, Users, KeyRound, ArrowLeft, Eye, EyeOff, Trash2, CheckSquare } from 'lucide-react'
 
 type AuthView = 'signin' | 'signup' | 'reset'
 
@@ -18,6 +18,8 @@ export function Auth() {
   const [lockedEmail, setLockedEmail] = useState(false)
   const [lockedTeam, setLockedTeam] = useState(false)
 
+  const [taskAssignedPrompt, setTaskAssignedPrompt] = useState(false)
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     if (params.get('invite') === 'true') {
@@ -25,6 +27,10 @@ export function Auth() {
       const inviteTeam = params.get('team') || ''
       if (inviteEmail) { setEmail(inviteEmail); setLockedEmail(true) }
       if (inviteTeam) { setTeamName(inviteTeam); setLockedTeam(true) }
+      setView('signup')
+      window.history.replaceState({}, '', window.location.pathname)
+    } else if (params.get('view') === 'assigned_to_me') {
+      setTaskAssignedPrompt(true)
       setView('signup')
       window.history.replaceState({}, '', window.location.pathname)
     }
@@ -158,6 +164,14 @@ export function Auth() {
             <button onClick={() => { setView('signin'); setResetSent(false) }} style={{ background: 'transparent', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '16px', fontSize: '0.85rem' }}>
               <ArrowLeft size={15} /> Back to Sign In
             </button>
+          )}
+          {taskAssignedPrompt && view === 'signup' && (
+            <div style={{ background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.3)', borderRadius: '12px', padding: '12px 16px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <CheckSquare size={18} color="var(--primary)" style={{ flexShrink: 0 }} />
+              <p style={{ fontSize: '0.85rem', color: 'var(--primary)', textAlign: 'left', margin: 0 }}>
+                You have tasks assigned to you! Create an account to view them.
+              </p>
+            </div>
           )}
           <h2 className="gradient-text" style={{ fontSize: '2rem', fontWeight: 700 }}>
             {view === 'signup' ? 'Join the Team' : view === 'reset' ? 'Reset Password' : 'Welcome Back'}
