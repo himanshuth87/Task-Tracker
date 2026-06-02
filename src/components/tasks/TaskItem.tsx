@@ -75,6 +75,16 @@ export function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId, curre
     }
   }
 
+  const markAsCompleted = async () => {
+    const { error } = await taskService.updateTask(task.id, { status: 'completed' }, currentUserEmail, currentUserName)
+    if (error) {
+      toast.error('Could not mark as done. You may not have permission.')
+    } else {
+      toast.success('Task marked as done!')
+      onUpdate()
+    }
+  }
+
   const handleDeleteClick = () => {
     setShowDeleteConfirm(true)
   }
@@ -396,11 +406,17 @@ export function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId, curre
         </div>
       )}
 
-      {/* Daily Update Prompt for Assignee */}
+      {/* Assignee actions */}
       {!isEditing && isAssignee && task.status !== 'completed' && (
-        <div style={{ marginTop: '4px' }}>
+        <div style={{ marginTop: '4px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <button
+            onClick={markAsCompleted}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: '#10b981', background: 'rgba(16,185,129,0.1)', padding: '6px 14px', borderRadius: '10px', fontWeight: 600, border: '1px solid rgba(16,185,129,0.25)' }}
+          >
+            <Check size={14} /> Mark as Done
+          </button>
           {!showDailyUpdate ? (
-            <button 
+            <button
               onClick={() => setShowDailyUpdate(true)}
               style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: 'var(--primary)', background: 'rgba(99,102,241,0.1)', padding: '6px 12px', borderRadius: '10px', fontWeight: 600, border: '1px solid rgba(99,102,241,0.2)' }}
             >
