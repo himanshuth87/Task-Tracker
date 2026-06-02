@@ -79,8 +79,20 @@ export function SettingsPage() {
       invited_by_name: profile.full_name,
       status: 'pending',
     }])
-    if (error) toast.error(error.message)
-    else { toast.success(`Invitation sent to ${inviteEmail}`); setInviteEmail(''); fetchData() }
+    if (error) {
+      toast.error(error.message)
+    } else {
+      supabase.functions.invoke('invite-member', {
+        body: {
+          invited_email: inviteEmail,
+          invited_by_name: profile.full_name,
+          team_name: profile.team_name,
+        },
+      }).catch(console.error)
+      toast.success(`Invitation sent to ${inviteEmail}`)
+      setInviteEmail('')
+      fetchData()
+    }
     setInviting(false)
   }
 
