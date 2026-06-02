@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Edit2, Trash2, Check, X, User, Clock, MessageCircle, ChevronDown, ChevronUp, AlertCircle, Loader2, CheckSquare, Paperclip, History, Square, Timer, Send } from 'lucide-react'
+import { Calendar, Edit2, Trash2, Check, X, User, Clock, MessageCircle, ChevronDown, ChevronUp, AlertCircle, Loader2, CheckSquare, Paperclip, History, Square, Timer, Send } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { type Task, type TaskStatus, supabase } from '../../supabase'

@@ -1,25 +1,23 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useOutletContext, useLocation, useNavigate } from 'react-router-dom'
 import {
-  Plus, Search, List, LayoutGrid, BarChart2, AlertCircle,
-  Bell, Users, Briefcase, UserCheck, Download,
+  Plus, Search, List, LayoutGrid, AlertCircle,
+  Bell, Users, Briefcase, UserCheck,
   BarChart3, TrendingUp, ClipboardList,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { TaskItem } from '../components/tasks/TaskItem'
 import { KanbanBoard } from '../components/tasks/KanbanBoard'
-import { AnalyticsCharts } from '../components/ui/AnalyticsCharts'
 import { BulkActionBar } from '../components/ui/BulkActionBar'
 import { FilterBtn } from '../components/ui/FilterBtn'
 import { StatItem } from '../components/ui/StatItem'
 import { taskService } from '../services/taskService'
 import { getDaysRemaining } from '../utils/dateUtils'
-import { downloadExcel, addToOutlook } from '../utils/exportUtils'
 import { type Task } from '../supabase'
 import type { AppContext } from '../components/layout/AppLayout'
 
 type FilterValue = 'all' | 'pending' | 'in_progress' | 'blocked' | 'completed' | 'assigned_to_me'
-type ViewLayout = 'list' | 'kanban' | 'charts'
+type ViewLayout = 'list' | 'kanban'
 
 export function TasksPage() {
   const { session, viewMode, setViewMode, setUnreadCount } = useOutletContext<AppContext>()
@@ -270,7 +268,7 @@ export function TasksPage() {
       </div>
 
       {/* Bulk select-all bar */}
-      {bulkMode && allTasks.length > 0 && viewLayout !== 'charts' && (
+      {bulkMode && allTasks.length > 0 && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px', padding: '8px 12px', borderRadius: '10px', background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)' }}>
           <button onClick={toggleSelectAll} style={{ background: 'transparent', color: 'var(--primary)', fontSize: '0.82rem', fontWeight: 600 }}>
             {selectedIds.length === allTasks.length ? 'Deselect All' : `Select All (${allTasks.length})`}
@@ -294,8 +292,6 @@ export function TasksPage() {
             {searchTerm ? 'Try a different search term.' : 'Create a new task to get started!'}
           </p>
         </div>
-      ) : viewLayout === 'charts' ? (
-        <AnalyticsCharts tasks={allTasks} />
       ) : viewLayout === 'kanban' ? (
         <div style={{ overflowX: 'auto' }}>
           <KanbanBoard tasks={allTasks} onUpdate={() => fetchTasks(true)} />
