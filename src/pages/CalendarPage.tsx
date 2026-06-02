@@ -117,7 +117,7 @@ export function CalendarPage() {
           ))}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px', flex: 1 }}>
+        <div className="calendar-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px', flex: 1 }}>
           {calendarDays.map((cDay, idx) => {
             const dayTasks = tasksByDate.get(cDay.date) || []
             const isToday = cDay.date === new Date().toISOString().split('T')[0]

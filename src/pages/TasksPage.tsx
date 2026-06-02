@@ -200,7 +200,7 @@ export function TasksPage() {
       </div>
 
       {/* Combined filter bar */}
-      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '14px', alignItems: 'center', padding: '4px', background: 'rgba(255,255,255,0.04)', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
+      <div className="filter-bar" style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '14px', alignItems: 'center', padding: '4px', background: 'rgba(255,255,255,0.04)', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
         <FilterBtn active={viewMode === 'personal' && filter !== 'assigned_to_me'} onClick={() => { setViewMode('personal'); setFilter('all') }} label="My Tasks" icon={<Briefcase size={13} />} />
         <FilterBtn active={filter === 'assigned_to_me'} onClick={() => { setViewMode('personal'); setFilter('assigned_to_me') }} label="Assigned to Me" icon={<UserCheck size={13} />} />
         <FilterBtn active={viewMode === 'team'} onClick={() => setViewMode('team')} label="Team" icon={<Users size={13} />} />

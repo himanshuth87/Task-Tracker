@@ -443,3 +443,132 @@
   background: rgba(255, 255, 255, 0.95);
 }
 
+/* ── User pill name (hidden on small phones) ─────────────────────── */
+.user-pill-name {
+  display: flex;
+  flex-direction: column;
+  padding-right: 4px;
+}
+
+/* ── Bottom navigation bar (mobile only) ─────────────────────────── */
+.bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  background: var(--glass-bg);
+  border-top: 1px solid var(--glass-border);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  z-index: 200;
+  align-items: stretch;
+  justify-content: space-around;
+  padding: 0 8px;
+}
+
+.bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  flex: 1;
+  text-decoration: none;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 8px 4px;
+  border-radius: 12px;
+  transition: all 0.2s;
+  min-height: 44px;
+}
+
+.bottom-nav-item.active {
+  color: var(--primary);
+}
+
+.bottom-nav-item.active svg {
+  filter: drop-shadow(0 0 4px var(--primary-glow));
+}
+
+.bottom-nav-label {
+  font-size: 0.65rem;
+}
+
+/* ── 991px: show bottom nav, adjust main padding ─────────────────── */
+@media (max-width: 991px) {
+  .bottom-nav {
+    display: flex;
+  }
+
+  .main-content-inner {
+    padding-bottom: 80px !important;
+  }
+}
+
+/* ── 640px: hide user name in header, scrollable filter bar ─────── */
+@media (max-width: 640px) {
+  .user-pill-name {
+    display: none;
+  }
+
+  /* Tighten the user avatar pill */
+  .top-header .hover-bg-glass {
+    padding: 6px;
+  }
+
+  /* Filter bar: single horizontal scroll row */
+  .filter-bar {
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .filter-bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Notification dropdown: shift left so it doesn't overflow */
+  .notification-dropdown {
+    right: -60px;
+    min-width: 300px;
+  }
+
+  /* Calendar grid: smaller cells */
+  .calendar-grid > button {
+    min-height: 60px !important;
+    padding: 4px !important;
+    border-radius: 8px !important;
+  }
+}
+
+/* ── 480px: phone-specific tightening ───────────────────────────── */
+@media (max-width: 480px) {
+  .top-header {
+    padding: 10px 14px !important;
+    height: 60px;
+  }
+
+  .main-content-inner {
+    padding: 12px 14px 80px !important;
+  }
+
+  /* Hide secondary icon buttons (theme toggle) to save space */
+  .hide-on-phone {
+    display: none !important;
+  }
+
+  /* Calendar weekday headers: abbreviated */
+  .calendar-grid > button {
+    min-height: 52px !important;
+    gap: 2px;
+  }
+
+  /* Make task chip text even smaller on phones */
+  .calendar-grid > button > div > div {
+    font-size: 0.6rem !important;
+  }
+}
+

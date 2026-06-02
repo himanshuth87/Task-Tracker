@@ -186,7 +186,7 @@ export function AppLayout({ session }: { session: Session }) {
             <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'linear-gradient(135deg, var(--primary), var(--secondary))', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: '0.9rem', flexShrink: 0, boxShadow: '0 0 10px var(--primary-glow)' }}>
               {initials}
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', paddingRight: '4px' }}>
+            <div className="user-pill-name">
               <p style={{ color: 'var(--text-main)', fontSize: '0.9rem', fontWeight: 600, lineHeight: 1.2 }}>{fullName}</p>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '2px' }}>
                 {user.user_metadata.team_name || 'General Team'}
@@ -222,11 +222,11 @@ export function AppLayout({ session }: { session: Session }) {
               </AnimatePresence>
             </div>
 
-            <div style={{ width: '1px', height: '20px', background: 'var(--glass-border)', margin: '0 2px' }} />
+            <div className="hide-on-phone" style={{ width: '1px', height: '20px', background: 'var(--glass-border)', margin: '0 2px' }} />
 
             <button
               onClick={() => setIsLightMode(v => !v)}
-              className="action-btn icon-only"
+              className="action-btn icon-only hide-on-phone"
               title={isLightMode ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
               style={{ padding: '8px', borderRadius: '50%', background: 'transparent', border: 'none' }}
             >
@@ -253,6 +253,20 @@ export function AppLayout({ session }: { session: Session }) {
       </div>
 
 
+
+      {/* ── Mobile Bottom Nav ──────────────────── */}
+      <nav className="bottom-nav">
+        {NAV_ITEMS.filter(n => ['/dashboard', '/tasks', '/calendar', '/settings'].includes(n.to)).map(({ to, label, icon }) => (
+          <NavLink
+            key={to}
+            to={to}
+            className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}
+          >
+            <span>{icon}</span>
+            <span className="bottom-nav-label">{label}</span>
+          </NavLink>
+        ))}
+      </nav>
 
       {/* Trash Modal */}
       <AnimatePresence>
