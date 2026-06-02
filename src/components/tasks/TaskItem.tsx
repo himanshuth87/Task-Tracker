@@ -64,7 +64,9 @@ export function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId, curre
 
   const cycleStatus = async () => {
     const { error, nextStatus } = await taskService.cycleStatus(task, currentUserEmail, currentUserName)
-    if (!error) {
+    if (error) {
+      toast.error('Could not update status. You may not have permission.')
+    } else {
       if (nextStatus === 'completed' && task.recurrence && task.recurrence !== 'none') {
         toast.success(`Task completed! Next ${task.recurrence} occurrence created.`)
       } else {
