@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Calendar, Edit2, Trash2, Check, X, User, Clock, MessageCircle, ChevronDown, ChevronUp, AlertCircle, Loader2, CheckSquare, Paperclip, Link2, History, Square, Timer, Send } from 'lucide-react'
+import { Calendar, Edit2, Trash2, Check, X, User, Clock, MessageCircle, ChevronDown, ChevronUp, AlertCircle, Loader2, CheckSquare, Paperclip, History, Square, Timer, Send } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { type Task, type TaskStatus, supabase } from '../../supabase'
@@ -8,7 +8,6 @@ import { commentService } from '../../services/commentService'
 import { TaskComments } from './TaskComments'
 import { SubTaskList } from './SubTaskList'
 import { FileAttachments } from './FileAttachments'
-import { TaskDependencies } from './TaskDependencies'
 import { ActivityLogPanel } from './ActivityLogPanel'
 import { formatDate, getDaysRemaining } from '../../utils/dateUtils'
 import { Avatar } from '../ui/Avatar'
@@ -264,11 +263,8 @@ export function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId, curre
                   </div>
                 )}
                 {task.assigned_to_email && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(16,185,129,0.1)', padding: '2px 8px 2px 4px', borderRadius: '20px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(16,185,129,0.1)', padding: '2px 6px 2px 4px', borderRadius: '20px' }} title={task.assigned_to_email}>
                     <Avatar email={task.assigned_to_email} size={16} />
-                    <span style={{ fontSize: '0.72rem', color: '#10b981', fontWeight: 600 }}>
-                      {task.assigned_to_email.split('@')[0]}
-                    </span>
                   </div>
                 )}
                 {task.team_name && (
@@ -377,16 +373,18 @@ export function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId, curre
                 <span>{subtasksInfo.completed} / {subtasksInfo.total} Subtasks</span>
               </div>
             )}
-            <div className="meta-info">
-              <Timer size={13} />
-              <span>{task.time_logged_minutes || 0}m logged</span>
-              {isAssignee && (
-                <div style={{ display: 'flex', gap: '2px', marginLeft: '4px' }}>
-                  <button onClick={() => handleTimeLog(15)} title="+15m" style={{ background: 'rgba(99,102,241,0.1)', color: 'var(--primary)', fontSize: '0.7rem', padding: '1px 4px', borderRadius: '4px' }}>+15</button>
-                  <button onClick={() => handleTimeLog(60)} title="+1h" style={{ background: 'rgba(99,102,241,0.1)', color: 'var(--primary)', fontSize: '0.7rem', padding: '1px 4px', borderRadius: '4px' }}>+1h</button>
-                </div>
-              )}
-            </div>
+            {(task.time_logged_minutes > 0 || isAssignee) && (
+              <div className="meta-info">
+                <Timer size={13} />
+                {task.time_logged_minutes > 0 && <span>{task.time_logged_minutes}m logged</span>}
+                {isAssignee && (
+                  <div style={{ display: 'flex', gap: '2px', marginLeft: '4px' }}>
+                    <button onClick={() => handleTimeLog(15)} title="+15m" style={{ background: 'rgba(99,102,241,0.1)', color: 'var(--primary)', fontSize: '0.7rem', padding: '1px 4px', borderRadius: '4px' }}>+15</button>
+                    <button onClick={() => handleTimeLog(60)} title="+1h" style={{ background: 'rgba(99,102,241,0.1)', color: 'var(--primary)', fontSize: '0.7rem', padding: '1px 4px', borderRadius: '4px' }}>+1h</button>
+                  </div>
+                )}
+              </div>
+            )}
           </>
         )}
       </div>
@@ -442,7 +440,6 @@ export function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId, curre
           {panelBtn(<MessageCircle size={12} />, 'comments', 'Comments')}
           {panelBtn(<CheckSquare size={12} />, 'subtasks', 'Checklist')}
           {panelBtn(<Paperclip size={12} />, 'attachments', 'Files')}
-          {panelBtn(<Link2 size={12} />, 'dependencies', 'Deps')}
           {panelBtn(<History size={12} />, 'activity', 'Activity')}
         </div>
       )}
@@ -462,10 +459,7 @@ export function TaskItem({ task, onUpdate, onAddToCalendar, currentUserId, curre
       {!isEditing && activePanel === 'attachments' && (
         <FileAttachments taskId={task.id} currentUserEmail={currentUserEmail} />
       )}
-      {!isEditing && activePanel === 'dependencies' && (
-        <TaskDependencies taskId={task.id} teamName={task.team_name || 'General'} />
-      )}
-      {!isEditing && activePanel === 'activity' && (
+{!isEditing && activePanel === 'activity' && (
         <ActivityLogPanel taskId={task.id} />
       )}
       {showDeleteConfirm && (

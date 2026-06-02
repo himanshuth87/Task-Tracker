@@ -198,38 +198,17 @@ export function TasksPage() {
         </div>
       </div>
 
-      {/* View mode + Status filter tabs */}
-      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '14px', alignItems: 'center' }}>
-        <div style={{ display: 'flex', gap: '4px', padding: '4px', background: 'rgba(255,255,255,0.04)', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
-          <FilterBtn
-            active={viewMode === 'personal' && filter !== 'assigned_to_me'}
-            onClick={() => { setViewMode('personal'); setFilter('all') }}
-            label="My Tasks"
-            icon={<Briefcase size={13} />}
-          />
-          <FilterBtn
-            active={filter === 'assigned_to_me'}
-            onClick={() => { setViewMode('personal'); setFilter('assigned_to_me') }}
-            label="Assigned to Me"
-            icon={<UserCheck size={13} />}
-          />
-          <FilterBtn
-            active={viewMode === 'team'}
-            onClick={() => setViewMode('team')}
-            label="Team"
-            icon={<Users size={13} />}
-          />
-        </div>
-
-        <div style={{ width: '1px', height: '24px', background: 'var(--glass-border)', flexShrink: 0 }} />
-
-        <div style={{ display: 'flex', gap: '4px', padding: '4px', background: 'rgba(255,255,255,0.04)', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
-          <FilterBtn active={filter === 'all' || filter === 'assigned_to_me'} onClick={() => { if (filter !== 'assigned_to_me') setFilter('all') }} label="All" />
-          <FilterBtn active={filter === 'pending'} onClick={() => setFilter('pending')} label="Pending" />
-          <FilterBtn active={filter === 'in_progress'} onClick={() => setFilter('in_progress')} label="In Progress" />
-          <FilterBtn active={filter === 'blocked'} onClick={() => setFilter('blocked')} label="Blocked" icon={<AlertCircle size={12} />} />
-          <FilterBtn active={filter === 'completed'} onClick={() => setFilter('completed')} label="Done" />
-        </div>
+      {/* Combined filter bar */}
+      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '14px', alignItems: 'center', padding: '4px', background: 'rgba(255,255,255,0.04)', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
+        <FilterBtn active={viewMode === 'personal' && filter !== 'assigned_to_me'} onClick={() => { setViewMode('personal'); setFilter('all') }} label="My Tasks" icon={<Briefcase size={13} />} />
+        <FilterBtn active={filter === 'assigned_to_me'} onClick={() => { setViewMode('personal'); setFilter('assigned_to_me') }} label="Assigned to Me" icon={<UserCheck size={13} />} />
+        <FilterBtn active={viewMode === 'team'} onClick={() => setViewMode('team')} label="Team" icon={<Users size={13} />} />
+        <div style={{ width: '1px', height: '20px', background: 'var(--glass-border)', flexShrink: 0, margin: '0 2px' }} />
+        <FilterBtn active={filter === 'all' || filter === 'assigned_to_me'} onClick={() => { if (filter !== 'assigned_to_me') setFilter('all') }} label="All" />
+        <FilterBtn active={filter === 'pending'} onClick={() => setFilter('pending')} label="Pending" />
+        <FilterBtn active={filter === 'in_progress'} onClick={() => setFilter('in_progress')} label="In Progress" />
+        <FilterBtn active={filter === 'blocked'} onClick={() => setFilter('blocked')} label="Blocked" icon={<AlertCircle size={12} />} />
+        <FilterBtn active={filter === 'completed'} onClick={() => setFilter('completed')} label="Done" />
       </div>
 
       {/* Search + view toggle + actions */}
