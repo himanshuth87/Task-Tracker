@@ -78,6 +78,15 @@ function App() {
   const [isRecovery, setIsRecovery] = useState(false)
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const isInviteLink = params.get('invite') === 'true'
+    const isTaskLink = params.get('view') === 'assigned_to_me'
+
+    if (isInviteLink || isTaskLink) {
+      supabase.auth.signOut().then(() => setAuthLoading(false))
+      return
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
       setAuthLoading(false)
