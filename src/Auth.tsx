@@ -12,6 +12,8 @@ export function Auth() {
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')
   const [teamName, setTeamName] = useState('')
+  const [teams, setTeams] = useState<string[]>([])
+  const [isNewTeamInput, setIsNewTeamInput] = useState(false)
   const [view, setView] = useState<AuthView>('signin')
   const [resetSent, setResetSent] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -19,6 +21,15 @@ export function Auth() {
   const [lockedTeam, setLockedTeam] = useState(false)
 
   const [taskAssignedPrompt, setTaskAssignedPrompt] = useState(false)
+
+  useEffect(() => {
+    supabase.from('profiles').select('team_name').then(({ data }) => {
+      if (data) {
+        const unique = [...new Set(data.map((r: any) => r.team_name).filter(Boolean))] as string[]
+        setTeams(unique.sort())
+      }
+    })
+  }, [])
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -201,7 +212,20 @@ export function Auth() {
                 </div>
                 <div>
                   {inputLabel('Team Name', <Users size={16} />)}
-                  <input required value={teamName} onChange={e => !lockedTeam && setTeamName(e.target.value)} placeholder="e.g. Marketing, Sales, IT" style={{ width: '100%', opacity: lockedTeam ? 0.6 : 1, cursor: lockedTeam ? 'not-allowed' : 'text' }} readOnly={lockedTeam} />
+                  {lockedTeam ? (
+                    <input required value={teamName} readOnly style={{ width: '100%', opacity: 0.6, cursor: 'not-allowed' }} />
+                  ) : isNewTeamInput ? (
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <input required value={teamName} onChange={e => setTeamName(e.target.value)} placeholder="Enter new team name" style={{ flex: 1 }} autoFocus />
+                      <button type="button" onClick={() => { setIsNewTeamInput(false); setTeamName('') }} style={{ background: 'rgba(255,255,255,0.08)', color: 'var(--text-muted)', border: '1px solid var(--glass-border)', borderRadius: '10px', padding: '0 12px', fontSize: '0.8rem' }}>Back</button>
+                    </div>
+                  ) : (
+                    <select required value={teamName} onChange={e => { if (e.target.value === '__new__') { setIsNewTeamInput(true); setTeamName('') } else setTeamName(e.target.value) }} style={{ width: '100%' }}>
+                      <option value="">Select a team...</option>
+                      {teams.map(t => <option key={t} value={t}>{t}</option>)}
+                      <option value="__new__">+ Create new team</option>
+                    </select>
+                  )}
                 </div>
               </>
             )}
