@@ -22,11 +22,35 @@ function shiftDate(dateStr: string | null, days: number): string | null {
 }
 
 const PAGE_SIZE = 20
+const STATUS_FILTERS = ['pending', 'in_progress', 'blocked', 'completed']
+
+async function applyTaskFilters(query: any, session: any, viewMode: 'personal' | 'team', filter: string, searchTerm: string) {
+  if (viewMode === 'personal') {
+    if (filter === 'assigned_to_me') {
+      query = query.eq('assigned_to_email', session.user.email)
+    } else {
+      query = query.or(`user_id.eq.${session.user.id},assigned_to_email.eq.${session.user.email}`)
+    }
+  } else if (viewMode === 'team') {
+    const { data: profile } = await supabase.from('profiles').select('team_name').eq('id', session.user.id).single()
+    const teamName = profile?.team_name || session.user.user_metadata.team_name || 'General'
+    query = query.eq('team_name', teamName)
+  }
+
+  if (STATUS_FILTERS.includes(filter)) {
+    query = query.eq('status', filter)
+  }
+
+  if (searchTerm) {
+    query = query.or(`title.ilike.%${searchTerm}%,remarks.ilike.%${searchTerm}%,task_giver.ilike.%${searchTerm}%,assigned_to_email.ilike.%${searchTerm}%,tags.cs.{${searchTerm.toLowerCase()}}`)
+  }
+
+  return query
+}
 
 export const taskService = {
   async fetchTasks(session: any, viewMode: 'personal' | 'team', filter: string, page = 0, searchTerm = '') {
     if (!session) return { data: [], error: null, count: 0 }
-
     let query = supabase
       .from('tasks')
       .select('*', { count: 'exact' })
@@ -34,63 +58,20 @@ export const taskService = {
       .order('position', { ascending: true })
       .order('created_at', { ascending: false })
       .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1)
-
-    if (viewMode === 'personal') {
-      if (filter === 'assigned_to_me') {
-        query = query.eq('assigned_to_email', session.user.email)
-      } else {
-        query = query.or(`user_id.eq.${session.user.id},assigned_to_email.eq.${session.user.email}`)
-      }
-    } else if (viewMode === 'team') {
-      const { data: profile } = await supabase.from('profiles').select('team_name').eq('id', session.user.id).single()
-      const teamName = profile?.team_name || session.user.user_metadata.team_name || 'General'
-      query = query.eq('team_name', teamName)
-    }
-
-    const STATUS_FILTERS = ['pending', 'in_progress', 'blocked', 'completed']
-    if (STATUS_FILTERS.includes(filter)) {
-      query = query.eq('status', filter)
-    }
-
-    if (searchTerm) {
-      query = query.or(`title.ilike.%${searchTerm}%,remarks.ilike.%${searchTerm}%,task_giver.ilike.%${searchTerm}%,assigned_to_email.ilike.%${searchTerm}%,tags.cs.{${searchTerm.toLowerCase()}}`)
-    }
-
+    query = await applyTaskFilters(query, session, viewMode, filter, searchTerm)
     const { data, error, count } = await query
     return { data: data || [], error, count: count || 0 }
   },
 
   async fetchAllTasks(session: any, viewMode: 'personal' | 'team', filter: string, searchTerm = '') {
     if (!session) return { data: [], error: null }
-
     let query = supabase
       .from('tasks')
       .select('*')
       .is('deleted_at', null)
       .order('position', { ascending: true })
       .order('created_at', { ascending: false })
-
-    if (viewMode === 'personal') {
-      if (filter === 'assigned_to_me') {
-        query = query.eq('assigned_to_email', session.user.email)
-      } else {
-        query = query.or(`user_id.eq.${session.user.id},assigned_to_email.eq.${session.user.email}`)
-      }
-    } else if (viewMode === 'team') {
-      const { data: profile } = await supabase.from('profiles').select('team_name').eq('id', session.user.id).single()
-      const teamName = profile?.team_name || session.user.user_metadata.team_name || 'General'
-      query = query.eq('team_name', teamName)
-    }
-
-    const STATUS_FILTERS = ['pending', 'in_progress', 'blocked', 'completed']
-    if (STATUS_FILTERS.includes(filter)) {
-      query = query.eq('status', filter)
-    }
-
-    if (searchTerm) {
-      query = query.or(`title.ilike.%${searchTerm}%,remarks.ilike.%${searchTerm}%,task_giver.ilike.%${searchTerm}%,assigned_to_email.ilike.%${searchTerm}%,tags.cs.{${searchTerm.toLowerCase()}}`)
-    }
-
+    query = await applyTaskFilters(query, session, viewMode, filter, searchTerm)
     return await query
   },
 

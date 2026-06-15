@@ -1,17 +1,35 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3"
 import { Resend } from "npm:resend"
+import { corsHeaders } from "../_shared/cors.ts"
 
 const resend = new Resend(Deno.env.get('RESEND_API_KEY'))
 const fromEmail = Deno.env.get('RESEND_FROM_EMAIL') || 'noreply@hscvpl.in'
-const appUrl = 'https://tasktracker.hscvpl.in'
+const appUrl = Deno.env.get('APP_URL') || 'https://tasktracker.hscvpl.in'
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+const supabase = createClient(
+  Deno.env.get('SUPABASE_URL') ?? '',
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+)
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
 }
 
-serve(async (req) => {
+function jsonResponse(body: object, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  })
+}
+
+serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -19,17 +37,9 @@ serve(async (req) => {
   try {
     const { email } = await req.json()
 
-    if (!email) {
-      return new Response(JSON.stringify({ error: 'Email is required' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+    if (!email || !EMAIL_RE.test(email)) {
+      return jsonResponse({ error: 'Valid email is required' }, 400)
     }
-
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
 
     const { data, error: linkError } = await supabase.auth.admin.generateLink({
       type: 'recovery',
@@ -38,13 +48,11 @@ serve(async (req) => {
     })
 
     if (linkError || !data?.properties?.action_link) {
-      return new Response(JSON.stringify({ error: linkError?.message || 'Could not generate reset link' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonResponse({ error: 'Could not generate reset link' }, 400)
     }
 
     const resetLink = data.properties.action_link
+    const safeEmail = escapeHtml(email)
 
     const { error: emailError } = await resend.emails.send({
       from: `TaskTracker <${fromEmail}>`,
@@ -60,7 +68,7 @@ serve(async (req) => {
 
           <div style="padding: 32px 36px;">
             <p style="margin: 0 0 24px 0; font-size: 1rem; color: #374151; line-height: 1.6;">
-              We received a request to reset your password for <strong>${email}</strong>. Click the button below to choose a new password.
+              We received a request to reset your password for <strong>${safeEmail}</strong>. Click the button below to choose a new password.
             </p>
 
             <div style="text-align: center; margin: 32px 0;">
@@ -85,19 +93,11 @@ serve(async (req) => {
     })
 
     if (emailError) {
-      return new Response(JSON.stringify({ error: emailError.message }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonResponse({ error: 'Failed to send email' }, 500)
     }
 
-    return new Response(JSON.stringify({ success: true }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
-  } catch (err) {
-    return new Response(JSON.stringify({ error: String(err) }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return jsonResponse({ success: true })
+  } catch {
+    return jsonResponse({ error: 'Internal server error' }, 500)
   }
 })

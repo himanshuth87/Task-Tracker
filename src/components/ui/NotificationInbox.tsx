@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Bell, CheckCheck, Trash2, Briefcase, MessageCircle, AtSign, Info } from 'lucide-react'
 import { type AppNotification } from '../../supabase'
 import { notificationService } from '../../services/notificationService'
+import { timeAgo } from '../../utils/dateUtils'
 
 interface NotificationInboxProps {
   userEmail: string
@@ -15,13 +16,6 @@ const TYPE_ICON: Record<string, React.ReactNode> = {
   info: <Info size={14} color="#94a3b8" />,
 }
 
-function timeAgo(dateStr: string): string {
-  const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000)
-  if (diff < 60) return 'just now'
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`
-  return `${Math.floor(diff / 86400)}d ago`
-}
 
 export function NotificationInbox({ userEmail, onUnreadChange }: NotificationInboxProps) {
   const [notifications, setNotifications] = useState<AppNotification[]>([])

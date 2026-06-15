@@ -15,7 +15,6 @@ export function TaskDependencies({ taskId, teamName }: TaskDependenciesProps) {
   const [search, setSearch] = useState('')
   const [results, setResults] = useState<Task[]>([])
   const [showSearch, setShowSearch] = useState(false)
-  const [_saving, setSaving] = useState(false)
 
   const load = async () => {
     const { data } = await supabase
@@ -47,7 +46,6 @@ export function TaskDependencies({ taskId, teamName }: TaskDependenciesProps) {
       toast.error('Already added')
       return
     }
-    setSaving(true)
     const { error } = await supabase
       .from('task_dependencies')
       .insert([{ task_id: taskId, depends_on_task_id: dep.id }])
@@ -60,7 +58,6 @@ export function TaskDependencies({ taskId, teamName }: TaskDependenciesProps) {
       setShowSearch(false)
       await load()
     }
-    setSaving(false)
   }
 
   const removeDep = async (depId: string) => {

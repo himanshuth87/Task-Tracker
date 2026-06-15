@@ -9,7 +9,7 @@ import { TaskComments } from './TaskComments'
 import { SubTaskList } from './SubTaskList'
 import { FileAttachments } from './FileAttachments'
 import { ActivityLogPanel } from './ActivityLogPanel'
-import { formatDate, getDaysRemaining } from '../../utils/dateUtils'
+import { formatDate, getDaysRemaining, sanitizeTag } from '../../utils/dateUtils'
 import { Avatar } from '../ui/Avatar'
 import { ConfirmModal } from '../ui/ConfirmModal'
 
@@ -128,7 +128,7 @@ export function TaskItem({ task, onUpdate, currentUserId, currentUserEmail, curr
   const statusCfg = STATUS_CONFIG[task.status] ?? STATUS_CONFIG.pending
 
   const addTag = () => {
-    const t = tagInput.trim().toLowerCase().replace(/[^a-z0-9-]/g, '')
+    const t = sanitizeTag(tagInput)
     if (!t || editedTask.tags.includes(t)) { setTagInput(''); return }
     if (editedTask.tags.length >= 5) { toast.error('Max 5 tags'); return }
     setEditedTask(prev => ({ ...prev, tags: [...prev.tags, t] }))

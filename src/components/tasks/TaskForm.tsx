@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { toast } from 'sonner'
 import { Plus, X, Paperclip, CheckSquare, File, Image, FileText, Tag } from 'lucide-react'
 import { taskService } from '../../services/taskService'
+import { formatBytes, sanitizeTag } from '../../utils/dateUtils'
 import { subtaskService } from '../../services/subtaskService'
 import { attachmentService } from '../../services/attachmentService'
 import { supabase, type TaskRecurrence } from '../../supabase'
@@ -21,11 +22,6 @@ function FileIcon({ file }: { file: File }) {
   return <File size={13} color="var(--text-muted)" />
 }
 
-function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-}
 
 const label = (text: string) => (
   <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.8rem', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase' as const, color: 'var(--text-muted)' }}>
@@ -88,7 +84,7 @@ export function TaskForm({ onTaskAdded, onCancel, userId, userEmail, fullName, t
   }
 
   const addTag = () => {
-    const t = tagInput.trim().toLowerCase().replace(/[^a-z0-9-]/g, '')
+    const t = sanitizeTag(tagInput)
     if (!t || tags.includes(t)) { setTagInput(''); return }
     if (tags.length >= 5) { toast.error('Max 5 tags allowed'); return }
     setTags(prev => [...prev, t])

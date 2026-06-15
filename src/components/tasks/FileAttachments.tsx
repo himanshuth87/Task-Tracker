@@ -3,6 +3,7 @@ import { Paperclip, Upload, Trash2, Download, FileText, File, X, ZoomIn } from '
 import { toast } from 'sonner'
 import { type TaskAttachment } from '../../supabase'
 import { attachmentService } from '../../services/attachmentService'
+import { formatBytes } from '../../utils/dateUtils'
 import { ConfirmModal } from '../ui/ConfirmModal'
 
 interface FileAttachmentsProps {
@@ -10,12 +11,6 @@ interface FileAttachmentsProps {
   currentUserEmail: string
 }
 
-function formatBytes(bytes: number | null): string {
-  if (!bytes) return ''
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-}
 
 function NonImageIcon({ mime }: { mime: string | null }) {
   if (mime === 'application/pdf') return <FileText size={15} color="#f43f5e" />
