@@ -403,7 +403,7 @@ export function TaskItem({ task, onUpdate, currentUserId, currentUserEmail, curr
       )}
 
       {/* Assignee actions */}
-      {!isEditing && isAssignee && task.status !== 'completed' && (
+      {!isEditing && (isAssignee || isOwner) && task.status !== 'completed' && (
         <div style={{ marginTop: '4px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           <button
             onClick={markAsCompleted}
