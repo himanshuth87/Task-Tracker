@@ -18,7 +18,7 @@ export type MisRole = 'none' | 'designer' | 'photographer';
 export const MARKETING_CHANNELS = ['Online', 'MT', 'Offline'] as const;
 export const MARKETING_TASK_TYPES = [
   "Social Media Creative",
-  "Box Packaging",
+  "Box/ Carton Design",
   "Hangtag",
   "Sales Card",
   "Launch Deck",
