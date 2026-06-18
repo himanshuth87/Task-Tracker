@@ -12,6 +12,21 @@ export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '');
 export type TaskStatus = 'pending' | 'in_progress' | 'blocked' | 'completed';
 export type TaskRecurrence = 'none' | 'daily' | 'weekly' | 'monthly';
 export type UserRole = 'admin' | 'manager' | 'member';
+export type MisRole = 'none' | 'designer' | 'photographer';
+
+// Marketing MIS dropdown options (mirrors the marketing team's spreadsheets)
+export const MARKETING_CHANNELS = ['Online', 'MT', 'Offline'] as const;
+export const MARKETING_TASK_TYPES = [
+  "Social Media Creative",
+  "Box Packaging",
+  "Hangtag",
+  "Sales Card",
+  "Launch Deck",
+  "Store Banner",
+  "Website Banners",
+  "PDP's / A+ Content",
+  "Image AI Generation",
+] as const;
 
 export type Task = {
   id: string;
@@ -35,6 +50,24 @@ export type Task = {
   time_logged_minutes?: number;
   position?: number;
   deleted_at?: string | null;
+  // ── Marketing / MIS fields (migration 008) ──
+  mis_role?: MisRole;
+  channel?: string | null;
+  task_type?: string | null;
+  num_products?: number | null;
+  num_creatives?: number | null;
+  // designer
+  total_designs?: number | null;
+  approved_input?: number | null; // 0 / 1
+  rejected_inputs?: number | null;
+  quality_score?: number | null; // 1..5
+  actual_delivery?: string | null;
+  // photographer
+  shoot_units?: number | null;
+  num_angles?: number | null;
+  edit_units?: number | null;
+  shoot_hours?: number | null;
+  edit_hours?: number | null;
 };
 
 export type TaskComment = {

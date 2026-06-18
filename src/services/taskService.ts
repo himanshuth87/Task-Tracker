@@ -103,6 +103,26 @@ export const taskService = {
     return result
   },
 
+  async bulkAddTasks(rows: any[], userEmail?: string, userName?: string) {
+    const sanitized = rows.map(r => ({
+      ...r,
+      title: String(r.title || '').slice(0, 500),
+      remarks: r.remarks ? String(r.remarks).slice(0, 1000) : null,
+    }))
+
+    const result = await supabase.from('tasks').insert(sanitized).select()
+
+    if (!result.error && result.data && userEmail && userName) {
+      await Promise.all(
+        result.data.map((t: Task) =>
+          activityService.log(t.id, userEmail, userName, 'created', { title: t.title }).catch(console.error)
+        )
+      )
+    }
+
+    return result
+  },
+
   async cycleStatus(task: Task, userEmail?: string, userName?: string) {
     const nextStatus = STATUS_CYCLE[task.status] ?? 'pending'
 

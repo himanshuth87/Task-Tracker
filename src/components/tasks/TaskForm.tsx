@@ -1,11 +1,11 @@
 import { useState, useRef, useEffect } from 'react'
 import { toast } from 'sonner'
-import { Plus, X, Paperclip, CheckSquare, File, Image, FileText, Tag } from 'lucide-react'
+import { Plus, X, Paperclip, CheckSquare, File, Image, FileText, Tag, BarChart3 } from 'lucide-react'
 import { taskService } from '../../services/taskService'
 import { formatBytes, sanitizeTag } from '../../utils/dateUtils'
 import { subtaskService } from '../../services/subtaskService'
 import { attachmentService } from '../../services/attachmentService'
-import { supabase, type TaskRecurrence } from '../../supabase'
+import { supabase, type TaskRecurrence, type MisRole, MARKETING_CHANNELS, MARKETING_TASK_TYPES } from '../../supabase'
 
 interface TaskFormProps {
   onTaskAdded: () => void
@@ -42,6 +42,27 @@ export function TaskForm({ onTaskAdded, onCancel, userId, userEmail, fullName, t
   const [tagInput, setTagInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [teamMembers, setTeamMembers] = useState<{ email: string; full_name: string; team_name?: string }[]>([])
+
+  // ── Marketing / MIS fields ──
+  const [misRole, setMisRole] = useState<MisRole>('none')
+  const [channel, setChannel] = useState('')
+  const [taskType, setTaskType] = useState('')
+  const [numProducts, setNumProducts] = useState('')
+  const [numCreatives, setNumCreatives] = useState('')
+  // designer
+  const [totalDesigns, setTotalDesigns] = useState('')
+  const [approvedInput, setApprovedInput] = useState('')
+  const [rejectedInputs, setRejectedInputs] = useState('')
+  const [qualityScore, setQualityScore] = useState('')
+  const [actualDelivery, setActualDelivery] = useState('')
+  // photographer
+  const [shootUnits, setShootUnits] = useState('')
+  const [numAngles, setNumAngles] = useState('')
+  const [editUnits, setEditUnits] = useState('')
+  const [shootHours, setShootHours] = useState('')
+  const [editHours, setEditHours] = useState('')
+
+  const numOrNull = (v: string): number | null => (v.trim() === '' ? null : Number(v))
 
   useEffect(() => {
     async function loadMembers() {
@@ -124,6 +145,21 @@ export function TaskForm({ onTaskAdded, onCancel, userId, userEmail, fullName, t
       tags,
       time_logged_minutes: 0,
       position: 0,
+      mis_role: misRole,
+      channel: misRole !== 'none' ? (channel || null) : null,
+      task_type: misRole !== 'none' ? (taskType || null) : null,
+      num_products: misRole !== 'none' ? numOrNull(numProducts) : null,
+      num_creatives: misRole !== 'none' ? numOrNull(numCreatives) : null,
+      total_designs: misRole === 'designer' ? numOrNull(totalDesigns) : null,
+      approved_input: misRole === 'designer' ? numOrNull(approvedInput) : null,
+      rejected_inputs: misRole === 'designer' ? numOrNull(rejectedInputs) : null,
+      quality_score: misRole === 'designer' ? numOrNull(qualityScore) : null,
+      actual_delivery: misRole === 'designer' ? (actualDelivery || null) : null,
+      shoot_units: misRole === 'photographer' ? numOrNull(shootUnits) : null,
+      num_angles: misRole === 'photographer' ? numOrNull(numAngles) : null,
+      edit_units: misRole === 'photographer' ? numOrNull(editUnits) : null,
+      shoot_hours: misRole === 'photographer' ? numOrNull(shootHours) : null,
+      edit_hours: misRole === 'photographer' ? numOrNull(editHours) : null,
     }, userEmail, fullName)
 
     if (error || !newTask) {
@@ -180,6 +216,10 @@ export function TaskForm({ onTaskAdded, onCancel, userId, userEmail, fullName, t
     setTags([])
     setTagInput('')
     setDraftFiles([])
+    setMisRole('none')
+    setChannel(''); setTaskType(''); setNumProducts(''); setNumCreatives('')
+    setTotalDesigns(''); setApprovedInput(''); setRejectedInputs(''); setQualityScore(''); setActualDelivery('')
+    setShootUnits(''); setNumAngles(''); setEditUnits(''); setShootHours(''); setEditHours('')
     setLoading(false)
     onTaskAdded()
   }
@@ -286,6 +326,103 @@ export function TaskForm({ onTaskAdded, onCancel, userId, userEmail, fullName, t
               <Plus size={16} />
             </button>
           </div>
+        </div>
+
+        {/* ── Marketing / MIS ───────────────────────── */}
+        <div style={{ gridColumn: 'span 2' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+            <BarChart3 size={15} color="var(--primary)" />
+            {label('Marketing / MIS (optional)')}
+          </div>
+
+          <select value={misRole} onChange={e => setMisRole(e.target.value as MisRole)} style={{ width: '100%' }}>
+            <option value="none">Not a marketing MIS task</option>
+            <option value="designer">Graphic Designer task</option>
+            <option value="photographer">Photographer task</option>
+          </select>
+
+          {misRole !== 'none' && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginTop: '14px' }}>
+              <div>
+                {label('Channel')}
+                <select value={channel} onChange={e => setChannel(e.target.value)} style={{ width: '100%' }}>
+                  <option value="">—</option>
+                  {MARKETING_CHANNELS.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+              <div>
+                {label('Task Type')}
+                <select value={taskType} onChange={e => setTaskType(e.target.value)} style={{ width: '100%' }}>
+                  <option value="">—</option>
+                  {MARKETING_TASK_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </div>
+              <div>
+                {label('No. of Products')}
+                <input type="number" min={0} value={numProducts} onChange={e => setNumProducts(e.target.value)} style={{ width: '100%' }} />
+              </div>
+              <div>
+                {label('No. of Creatives/Images')}
+                <input type="number" min={0} value={numCreatives} onChange={e => setNumCreatives(e.target.value)} style={{ width: '100%' }} />
+              </div>
+
+              {misRole === 'designer' && (
+                <>
+                  <div>
+                    {label('Total Designs')}
+                    <input type="number" min={0} value={totalDesigns} onChange={e => setTotalDesigns(e.target.value)} style={{ width: '100%' }} />
+                  </div>
+                  <div>
+                    {label('Approved (1 = approved)')}
+                    <select value={approvedInput} onChange={e => setApprovedInput(e.target.value)} style={{ width: '100%' }}>
+                      <option value="">—</option>
+                      <option value="1">Approved</option>
+                      <option value="0">Not yet</option>
+                    </select>
+                  </div>
+                  <div>
+                    {label('Rejected Inputs')}
+                    <input type="number" min={0} value={rejectedInputs} onChange={e => setRejectedInputs(e.target.value)} style={{ width: '100%' }} />
+                  </div>
+                  <div>
+                    {label('Quality (1–5)')}
+                    <input type="number" min={1} max={5} value={qualityScore} onChange={e => setQualityScore(e.target.value)} style={{ width: '100%' }} />
+                  </div>
+                  <div style={{ gridColumn: 'span 2' }}>
+                    {label('Actual Delivery Date')}
+                    <input type="date" value={actualDelivery} onChange={e => setActualDelivery(e.target.value)} style={{ width: '100%' }} />
+                    <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '4px' }}>Expected delivery = the task Deadline above.</p>
+                  </div>
+                </>
+              )}
+
+              {misRole === 'photographer' && (
+                <>
+                  <div>
+                    {label('Shoot Units')}
+                    <input type="number" min={0} value={shootUnits} onChange={e => setShootUnits(e.target.value)} style={{ width: '100%' }} />
+                  </div>
+                  <div>
+                    {label('No. of Angles')}
+                    <input type="number" min={0} value={numAngles} onChange={e => setNumAngles(e.target.value)} style={{ width: '100%' }} />
+                  </div>
+                  <div>
+                    {label('Edit Units')}
+                    <input type="number" min={0} value={editUnits} onChange={e => setEditUnits(e.target.value)} style={{ width: '100%' }} />
+                  </div>
+                  <div />
+                  <div>
+                    {label('Shoot Hours')}
+                    <input type="number" min={0} step="0.25" value={shootHours} onChange={e => setShootHours(e.target.value)} style={{ width: '100%' }} />
+                  </div>
+                  <div>
+                    {label('Edit Hours')}
+                    <input type="number" min={0} step="0.25" value={editHours} onChange={e => setEditHours(e.target.value)} style={{ width: '100%' }} />
+                  </div>
+                </>
+              )}
+            </div>
+          )}
         </div>
 
         {/* ── Checklist ─────────────────────────────── */}

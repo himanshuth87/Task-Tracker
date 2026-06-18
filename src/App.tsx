@@ -71,6 +71,8 @@ import { NewTaskPage } from './pages/NewTaskPage'
 import { AnalyticsPage } from './pages/AnalyticsPage'
 import { CalendarPage } from './pages/CalendarPage'
 import { SettingsPage } from './pages/SettingsPage'
+import { MISDashboardPage } from './pages/MISDashboardPage'
+import { MarketingGridPage } from './pages/MarketingGridPage'
 
 function App() {
   const [session, setSession] = useState<Session | null>(null)
@@ -112,6 +114,8 @@ function App() {
           <Route path="tasks/new" element={<NewTaskPage />} />
           <Route path="calendar" element={<CalendarPage />} />
           <Route path="analytics" element={<AnalyticsPage />} />
+          <Route path="grid" element={<MarketingGridPage />} />
+          <Route path="mis" element={<MISDashboardPage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Route>

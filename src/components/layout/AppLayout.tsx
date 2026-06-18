@@ -3,7 +3,7 @@ import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import {
   Bell, LogOut, Sun, Moon, Menu, X, ChevronLeft, ChevronRight,
   Zap, LayoutDashboard, ListTodo, BarChart2, Settings,
-  Trash2, RotateCcw, Loader2, CalendarDays
+  Trash2, RotateCcw, Loader2, CalendarDays, Gauge, Table2
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { Session } from '@supabase/supabase-js'
@@ -23,10 +23,14 @@ export interface AppContext {
 const NAV_ITEMS = [
   { to: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard size={16} /> },
   { to: '/tasks', label: 'Tasks', icon: <ListTodo size={16} /> },
+  { to: '/grid', label: 'Grid Entry', icon: <Table2 size={16} /> },
   { to: '/calendar', label: 'Calendar', icon: <CalendarDays size={16} /> },
   { to: '/analytics', label: 'Analytics', icon: <BarChart2 size={16} /> },
   { to: '/settings', label: 'Settings', icon: <Settings size={16} /> },
 ]
+
+// Head-only nav item (managers/admins). Shown in addition to NAV_ITEMS.
+const MIS_NAV_ITEM = { to: '/mis', label: 'MIS', icon: <Gauge size={16} /> }
 
 export function AppLayout({ session }: { session: Session }) {
   const [isLightMode, setIsLightMode] = useState(() => localStorage.getItem('tasktracker_theme') === 'light')
@@ -38,8 +42,21 @@ export function AppLayout({ session }: { session: Session }) {
   const [trashLoading, setTrashLoading] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
   const [viewMode, setViewMode] = useState<'personal' | 'team'>('personal')
+  const [isManager, setIsManager] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
+
+  useEffect(() => {
+    let active = true
+    supabase.from('profiles').select('role').eq('id', session.user.id).single().then(({ data }) => {
+      if (!active) return
+      const role = data?.role || session.user.user_metadata?.role
+      setIsManager(role === 'manager' || role === 'admin')
+    })
+    return () => { active = false }
+  }, [session.user.id])
+
+  const navItems = isManager ? [...NAV_ITEMS, MIS_NAV_ITEM] : NAV_ITEMS
 
   useEffect(() => {
     if (isLightMode) {
@@ -122,7 +139,7 @@ export function AppLayout({ session }: { session: Session }) {
         </div>
 
         <nav className="sidebar-nav">
-          {NAV_ITEMS.map(({ to, label, icon }) => (
+          {navItems.map(({ to, label, icon }) => (
             <NavLink
               key={to}
               to={to}

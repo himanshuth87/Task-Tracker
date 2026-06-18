@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Calendar, Edit2, Trash2, Check, X, User, Clock, MessageCircle, ChevronDown, ChevronUp, AlertCircle, Loader2, CheckSquare, Paperclip, History, Square, Timer, Send } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
-import { type Task, type TaskStatus, supabase } from '../../supabase'
+import { type Task, type TaskStatus, type MisRole, supabase, MARKETING_CHANNELS, MARKETING_TASK_TYPES } from '../../supabase'
 import { taskService } from '../../services/taskService'
 import { commentService } from '../../services/commentService'
 import { TaskComments } from './TaskComments'
@@ -110,6 +110,21 @@ export function TaskItem({ task, onUpdate, currentUserId, currentUserEmail, curr
       tags: editedTask.tags,
       time_logged_minutes: editedTask.time_logged_minutes,
       assigned_to_email: editedTask.assigned_to_email || null,
+      mis_role: editedTask.mis_role || 'none',
+      channel: editedTask.mis_role && editedTask.mis_role !== 'none' ? (editedTask.channel || null) : null,
+      task_type: editedTask.mis_role && editedTask.mis_role !== 'none' ? (editedTask.task_type || null) : null,
+      num_products: editedTask.num_products ?? null,
+      num_creatives: editedTask.num_creatives ?? null,
+      total_designs: editedTask.mis_role === 'designer' ? (editedTask.total_designs ?? null) : null,
+      approved_input: editedTask.mis_role === 'designer' ? (editedTask.approved_input ?? null) : null,
+      rejected_inputs: editedTask.mis_role === 'designer' ? (editedTask.rejected_inputs ?? null) : null,
+      quality_score: editedTask.mis_role === 'designer' ? (editedTask.quality_score ?? null) : null,
+      actual_delivery: editedTask.mis_role === 'designer' ? (editedTask.actual_delivery || null) : null,
+      shoot_units: editedTask.mis_role === 'photographer' ? (editedTask.shoot_units ?? null) : null,
+      num_angles: editedTask.mis_role === 'photographer' ? (editedTask.num_angles ?? null) : null,
+      edit_units: editedTask.mis_role === 'photographer' ? (editedTask.edit_units ?? null) : null,
+      shoot_hours: editedTask.mis_role === 'photographer' ? (editedTask.shoot_hours ?? null) : null,
+      edit_hours: editedTask.mis_role === 'photographer' ? (editedTask.edit_hours ?? null) : null,
     }, currentUserEmail, currentUserName)
     if (!error) {
       toast.success('Task updated')
@@ -352,6 +367,55 @@ export function TaskItem({ task, onUpdate, currentUserId, currentUserEmail, curr
               <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Initial Time Logged (mins):</span>
               <input type="number" value={editedTask.time_logged_minutes || 0} onChange={e => setEditedTask({ ...editedTask, time_logged_minutes: parseInt(e.target.value) || 0 })} style={{ width: '80px', padding: '4px 8px' }} />
             </div>
+
+            {/* ── Marketing / MIS ── */}
+            <div style={{ gridColumn: 'span 2', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', borderTop: '1px solid var(--glass-border)', paddingTop: '12px' }}>
+              <select style={{ gridColumn: 'span 2' }} value={editedTask.mis_role || 'none'} onChange={e => setEditedTask({ ...editedTask, mis_role: e.target.value as MisRole })}>
+                <option value="none">Not a marketing MIS task</option>
+                <option value="designer">Graphic Designer task</option>
+                <option value="photographer">Photographer task</option>
+              </select>
+              {editedTask.mis_role && editedTask.mis_role !== 'none' && (
+                <>
+                  <select value={editedTask.channel || ''} onChange={e => setEditedTask({ ...editedTask, channel: e.target.value })}>
+                    <option value="">Channel —</option>
+                    {MARKETING_CHANNELS.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                  <select value={editedTask.task_type || ''} onChange={e => setEditedTask({ ...editedTask, task_type: e.target.value })}>
+                    <option value="">Task Type —</option>
+                    {MARKETING_TASK_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                  <input type="number" placeholder="No. of Products" value={editedTask.num_products ?? ''} onChange={e => setEditedTask({ ...editedTask, num_products: e.target.value === '' ? null : Number(e.target.value) })} />
+                  <input type="number" placeholder="No. of Creatives" value={editedTask.num_creatives ?? ''} onChange={e => setEditedTask({ ...editedTask, num_creatives: e.target.value === '' ? null : Number(e.target.value) })} />
+                </>
+              )}
+              {editedTask.mis_role === 'designer' && (
+                <>
+                  <input type="number" placeholder="Total Designs" value={editedTask.total_designs ?? ''} onChange={e => setEditedTask({ ...editedTask, total_designs: e.target.value === '' ? null : Number(e.target.value) })} />
+                  <select value={editedTask.approved_input ?? ''} onChange={e => setEditedTask({ ...editedTask, approved_input: e.target.value === '' ? null : Number(e.target.value) })}>
+                    <option value="">Approved? —</option>
+                    <option value="1">Approved</option>
+                    <option value="0">Not yet</option>
+                  </select>
+                  <input type="number" placeholder="Rejected Inputs" value={editedTask.rejected_inputs ?? ''} onChange={e => setEditedTask({ ...editedTask, rejected_inputs: e.target.value === '' ? null : Number(e.target.value) })} />
+                  <input type="number" min={1} max={5} placeholder="Quality (1-5)" value={editedTask.quality_score ?? ''} onChange={e => setEditedTask({ ...editedTask, quality_score: e.target.value === '' ? null : Number(e.target.value) })} />
+                  <label style={{ gridColumn: 'span 2', fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    Actual Delivery
+                    <input type="date" value={editedTask.actual_delivery || ''} onChange={e => setEditedTask({ ...editedTask, actual_delivery: e.target.value })} />
+                  </label>
+                </>
+              )}
+              {editedTask.mis_role === 'photographer' && (
+                <>
+                  <input type="number" placeholder="Shoot Units" value={editedTask.shoot_units ?? ''} onChange={e => setEditedTask({ ...editedTask, shoot_units: e.target.value === '' ? null : Number(e.target.value) })} />
+                  <input type="number" placeholder="No. of Angles" value={editedTask.num_angles ?? ''} onChange={e => setEditedTask({ ...editedTask, num_angles: e.target.value === '' ? null : Number(e.target.value) })} />
+                  <input type="number" placeholder="Edit Units" value={editedTask.edit_units ?? ''} onChange={e => setEditedTask({ ...editedTask, edit_units: e.target.value === '' ? null : Number(e.target.value) })} />
+                  <div />
+                  <input type="number" step="0.25" placeholder="Shoot Hours" value={editedTask.shoot_hours ?? ''} onChange={e => setEditedTask({ ...editedTask, shoot_hours: e.target.value === '' ? null : Number(e.target.value) })} />
+                  <input type="number" step="0.25" placeholder="Edit Hours" value={editedTask.edit_hours ?? ''} onChange={e => setEditedTask({ ...editedTask, edit_hours: e.target.value === '' ? null : Number(e.target.value) })} />
+                </>
+              )}
+            </div>
           </div>
         ) : (
           <>
@@ -399,6 +463,30 @@ export function TaskItem({ task, onUpdate, currentUserId, currentUserEmail, curr
       {!isEditing && task.remarks && (
         <div className="task-remarks">
           <p>"{task.remarks}"</p>
+        </div>
+      )}
+
+      {/* Marketing / MIS summary */}
+      {!isEditing && task.mis_role && task.mis_role !== 'none' && (
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', paddingLeft: '4px' }}>
+          <span style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--primary)', background: 'rgba(99,102,241,0.12)', padding: '2px 8px', borderRadius: '10px' }}>
+            {task.mis_role}
+          </span>
+          {task.channel && <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.06)', padding: '2px 8px', borderRadius: '10px' }}>{task.channel}</span>}
+          {task.task_type && <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.06)', padding: '2px 8px', borderRadius: '10px' }}>{task.task_type}</span>}
+          {task.mis_role === 'designer' && <>
+            {task.num_creatives != null && <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>🎨 {task.num_creatives} creatives</span>}
+            {task.total_designs != null && <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{task.total_designs} designs</span>}
+            {task.approved_input != null && <span style={{ fontSize: '0.72rem', color: task.approved_input >= 1 ? '#10b981' : 'var(--text-muted)' }}>{task.approved_input >= 1 ? '✓ Approved' : 'Pending approval'}</span>}
+            {task.rejected_inputs != null && task.rejected_inputs > 0 && <span style={{ fontSize: '0.72rem', color: '#f43f5e' }}>{task.rejected_inputs} rejected</span>}
+            {task.quality_score != null && <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>★ {task.quality_score}/5</span>}
+          </>}
+          {task.mis_role === 'photographer' && <>
+            {task.shoot_units != null && <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>📷 {task.shoot_units} shot</span>}
+            {task.num_angles != null && <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{task.num_angles} angles</span>}
+            {task.edit_units != null && <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{task.edit_units} edits</span>}
+            {(task.shoot_hours != null || task.edit_hours != null) && <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{((task.shoot_hours || 0) + (task.edit_hours || 0))}h</span>}
+          </>}
         </div>
       )}
 
